@@ -31,7 +31,7 @@ class GeoodleControl {
         this.color = '#ff0000';
 
         this.init_controls(controlDiv);
-        this.init_control_listeners(controlDiv);
+        this.init_control_listeners();
         this.init_center_marker();
         this.init_map_listeners();
     }
@@ -103,25 +103,33 @@ class GeoodleControl {
                     ">
                 </input>
             </div>`;
+
+        this.controls = {
+            add_point: controlDiv.getElementsByClassName('add_point')[0],
+            add_suggestion: controlDiv.getElementsByClassName('add_suggestion')[0],
+            remove_all: controlDiv.getElementsByClassName('remove_all')[0],
+            choose_color: controlDiv.getElementsByClassName('choose_color')[0]
+        }
     }
 
-    init_control_listeners(controlDiv) {
-        controlDiv.getElementsByClassName('add_point')[0].addEventListener('click', function() {
+    init_control_listeners() {
+        this.controls.add_point.addEventListener('click', function() {
             console.log('TODO: add_point');
         }.bind(this));
 
-        controlDiv.getElementsByClassName('add_suggestion')[0].addEventListener('click', function() {
+        this.controls.add_suggestion.addEventListener('click', function() {
             console.log('TODO: add_suggestion');
         }.bind(this));
 
-        controlDiv.getElementsByClassName('remove_all')[0].addEventListener('click', function() {
+        this.controls.remove_all.addEventListener('click', function() {
             this.remove_all();
             this.update_center_marker();
             this.emit('update');
         }.bind(this));
 
-        controlDiv.getElementsByClassName('choose_color')[0].addEventListener('change', function(e) {
+        this.controls.choose_color.addEventListener('change', function(e) {
             this.set_color(e.target.value);
+            this.emit('update');
         }.bind(this));
     }
 
@@ -160,7 +168,8 @@ class GeoodleControl {
             });
         });
 
-        this.emit('update');
+        // Make sure the input is set correctly
+        this.controls.choose_color.value = color;
     }
 
     add_marker(latLng) {
@@ -254,21 +263,25 @@ class GeoodleControl {
             ]
         }
         */
-        let output = [];
+        let points = [];
         this.markers.forEach(function(marker) {
             let latLng = marker.getPosition();
-            output.push({
+            points.push({
                 lat: latLng.lat(),
                 lng: latLng.lng()
             })
         });
         // window.location.hash
-        return output;
+        return {
+            color: this.color,
+            points: points
+        };
     }
 
     deserialise(input) {
         this.remove_all();
-        input.forEach(this.add_marker.bind(this));
+        this.set_color(input.color);
+        input.points.forEach(this.add_marker.bind(this));
         this.update_center_marker();
         this.emit('update');
     }
