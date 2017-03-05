@@ -1,1 +1,5 @@
 flask
+
+# Heroku
+gevent
+gunicorn
