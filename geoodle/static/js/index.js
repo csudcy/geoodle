@@ -12,10 +12,10 @@ function initMap() {
 
     // Create the DIV to hold the control and call the CenterControl()
     // constructor passing in this DIV.
-    // var centerControlDiv = document.createElement('div');
-    // var centerControl = new CenterControl(centerControlDiv, map);
-    // centerControlDiv.index = 1;
-    // map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
+    var centerControlDiv = document.createElement('div');
+    var centerControl = new GeoodleControl(centerControlDiv, map, LONDON);
+    centerControlDiv.index = 1;
+    map.controls[google.maps.ControlPosition.LEFT_CENTER].push(centerControlDiv);
 
     // Setup the centre marker
     centre_marker = new google.maps.Marker({
@@ -31,11 +31,21 @@ function initMap() {
 
 function add_marker(latLng) {
     var marker = new google.maps.Marker({
+        icon: {
+            path: POINT_PATH,
+            fillColor: 'red',
+            fillOpacity: 1,
+            anchor: {x: 12, y: 28}
+        },
         position: latLng,
-        map: map
+        map: map,
+        draggable: true
     });
     marker.addListener('click', function() {
         remove_marker(marker);
+    });
+    marker.addListener('drag', function() {
+        update_centre_marker();
     });
     markers.push(marker);
     update_centre_marker();
