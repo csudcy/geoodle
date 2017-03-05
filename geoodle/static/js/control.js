@@ -117,7 +117,7 @@ class GeoodleControl {
     }
 
     add_marker(latLng) {
-        var marker = new google.maps.Marker({
+        let marker = new google.maps.Marker({
             icon: {
                 path: POINT_PATH,
                 fillColor: 'red',
@@ -151,10 +151,10 @@ class GeoodleControl {
         if (this.markers.length <= 1) {
             this.center_marker.setPosition(this.center);
         } else {
-            var lat = 0,
+            let lat = 0,
                 lng = 0;
             this.markers.forEach(function(marker) {
-                var latLng = marker.getPosition();
+                let latLng = marker.getPosition();
                 lat += latLng.lat();
                 lng += latLng.lng();
             });
