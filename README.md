@@ -5,6 +5,15 @@
 Have you ever used [doodle.com](https://doodle.com) (the most **awesome** event planning service ever)? Ever sorted out the date then had arguments about where to go? That's where geoodle comes in!
 
 
+# Shoutouts
+
+Cool things which inspired me or I'm making use of in this project (in no particular order):
+* [doodle.com](https://doodle.com) - the most **awesome** event planning service ever
+* [Material Design Icons](https://material.io/icons/) - cool icons
+* [Heroku](https://heroku.com) - excellent hosting service (free tier is perfect for small apps)
+* [Emitter](https://github.com/component/emitter) - add events to your JS objects
+
+
 # TODO
 
 * ~~MVP:~~
