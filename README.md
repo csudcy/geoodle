@@ -26,13 +26,14 @@ Cool things which inspired me or I'm making use of in this project (in no partic
   * Later: Set your mode of transport
 * Create a geopoll
 * Add various points to the map:
-  * Anywhere you would like to be near (home, work, stations you pass through etc.)
-  * Suggestions of where to go
+  * ~~Anywhere you would like to be near (home, work, stations you pass through etc.)~~
+  * ~~Suggestions of where to go~~
+  * Add descriptions for points/suggestions
   * Later: Search for places
-* Geoodle will tell you the central point of all locations
+* ~~Geoodle will tell you the central point of all locations~~
 * You can add suggestions of where to go
-  * Later: Show approximage transport times/routes
-* People can vote on which suggestions the like (or refuse to go to!)
+  * Later: Show approximate transport times/routes
+* People can vote on which suggestions they like (or refuse to go to!)
 
 Things which might come later:
 
