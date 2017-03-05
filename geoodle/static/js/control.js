@@ -26,9 +26,13 @@ class GeoodleControl {
     constructor(controlDiv, map, center) {
         this.center = center;
         this.map = map;
-        this.markers = [];
+        this.markers = {
+            points: [],
+            suggestions: []
+        };
 
         this.color = '#ff0000';
+        this.current_mode = 'points';
 
         this.init_controls(controlDiv);
         this.init_control_listeners();
@@ -61,7 +65,6 @@ class GeoodleControl {
                         border: 2px solid rgb(255, 255, 255);
                         border-radius: 10px;
                         padding: 5px;
-                        display: none;
                     ">
                 </div>
                 <div
@@ -77,7 +80,6 @@ class GeoodleControl {
                         border: 2px solid rgb(255, 255, 255);
                         border-radius: 10px;
                         padding: 5px;
-                        display: none;
                     ">
                 </div>
                 <div
@@ -135,11 +137,15 @@ class GeoodleControl {
 
     init_control_listeners() {
         this.controls.add_point.addEventListener('click', function() {
-            console.log('TODO: add_point');
+            this.current_mode = 'points';
+            this.controls.add_point.style['background-color'] = 'darkgrey';
+            this.controls.add_suggestion.style['background-color'] = 'lightgrey';
         }.bind(this));
 
         this.controls.add_suggestion.addEventListener('click', function() {
-            console.log('TODO: add_suggestion');
+            this.current_mode = 'suggestions';
+            this.controls.add_point.style['background-color'] = 'lightgrey';
+            this.controls.add_suggestion.style['background-color'] = 'darkgrey';
         }.bind(this));
 
         this.controls.remove_all.addEventListener('click', function() {
@@ -174,8 +180,12 @@ class GeoodleControl {
 
     init_map_listeners() {
         map.addListener('click', function(e) {
-            this.add_marker(e.latLng);
-            this.update_center_marker();
+            if (this.current_mode == 'points') {
+                this.add_point(e.latLng);
+                this.update_center_marker();
+            } else {
+                this.add_suggestion(e.latLng);
+            }
             this.emit('update');
         }.bind(this));
     }
@@ -184,7 +194,15 @@ class GeoodleControl {
         this.color = color;
 
         // Update all the markers
-        this.markers.forEach(function(marker) {
+        this.markers.points.forEach(function(marker) {
+            marker.setIcon({
+                path: POINT_PATH,
+                fillColor: color,
+                fillOpacity: 1,
+                anchor: {x: 12, y: 12}
+            });
+        });
+        this.markers.suggestions.forEach(function(marker) {
             marker.setIcon({
                 path: POINT_PATH,
                 fillColor: color,
@@ -197,7 +215,7 @@ class GeoodleControl {
         this.controls.choose_color.value = color;
     }
 
-    add_marker(latLng) {
+    add_point(latLng) {
         let marker = new google.maps.Marker({
             icon: {
                 path: POINT_PATH,
@@ -210,7 +228,7 @@ class GeoodleControl {
             draggable: true
         });
         marker.addListener('click', function() {
-            this.remove_marker(marker);
+            this.remove_marker('points', marker);
             this.update_center_marker();
             this.emit('update');
         }.bind(this));
@@ -220,37 +238,64 @@ class GeoodleControl {
         marker.addListener('dragend', function() {
             this.emit('update');
         }.bind(this));
-        this.markers.push(marker);
+        this.markers.points.push(marker);
     }
 
-    remove_marker(marker) {
+    add_suggestion(latLng) {
+        let marker = new google.maps.Marker({
+            icon: {
+                path: SUGGESTION_PATH,
+                fillColor: this.color,
+                fillOpacity: 1,
+                anchor: {x: 12, y: 12}
+            },
+            position: latLng,
+            map: this.map,
+            draggable: true
+        });
+        marker.addListener('click', function() {
+            this.remove_marker('suggestions', marker);
+            this.emit('update');
+        }.bind(this));
+        marker.addListener('dragend', function() {
+            this.emit('update');
+        }.bind(this));
+        this.markers.suggestions.push(marker);
+    }
+
+    remove_marker(type, marker) {
         marker.setMap(null);
-        this.markers.splice(
-            this.markers.indexOf(marker),
+        this.markers[type].splice(
+            this.markers[type].indexOf(marker),
             1
         );
     }
 
     remove_all() {
-        this.markers.forEach(function(marker) {
+        this.markers.points.forEach(function(marker) {
             marker.setMap(null);
         });
-        this.markers.length = 0;
+        this.markers.points.length = 0;
+
+        this.markers.suggestions.forEach(function(marker) {
+            marker.setMap(null);
+        });
+        this.markers.suggestions.length = 0;
     }
 
     update_center_marker() {
-        if (this.markers.length <= 1) {
+        if (this.markers.points.length <= 1) {
             this.center_marker.setPosition(this.center);
         } else {
             let lat = 0,
                 lng = 0;
-            this.markers.forEach(function(marker) {
+            this.markers.points.forEach(function(marker) {
                 let latLng = marker.getPosition();
                 lat += latLng.lat();
                 lng += latLng.lng();
             });
-            lat /= this.markers.length;
-            lng /= this.markers.length;
+            lat /= this.markers.points.length;
+            lng /= this.markers.points.length;
             this.center_marker.setPosition({
                 lat: lat,
                 lng: lng
@@ -292,25 +337,32 @@ class GeoodleControl {
             ]
         }
         */
-        let points = [];
-        this.markers.forEach(function(marker) {
-            let latLng = marker.getPosition();
-            points.push({
-                lat: latLng.lat(),
-                lng: latLng.lng()
-            })
-        });
-        // window.location.hash
-        return {
-            color: this.color,
-            points: points
+        let output = {
+            color: this.color
         };
+
+        Object.keys(this.markers).forEach(function(type) {
+            let markers = [];
+            this.markers[type].forEach(function(marker) {
+                let latLng = marker.getPosition();
+                markers.push({
+                    lat: latLng.lat(),
+                    lng: latLng.lng()
+                })
+            });
+            output[type] = markers;
+        }.bind(this));
+
+        return output;
     }
 
     deserialise(input) {
         this.remove_all();
         this.set_color(input.color);
-        input.points.forEach(this.add_marker.bind(this));
+        input.points.forEach(this.add_point.bind(this));
+        if (input.suggestions) {
+            input.suggestions.forEach(this.add_suggestion.bind(this));
+        }
         this.update_center_marker();
         this.emit('update');
     }
