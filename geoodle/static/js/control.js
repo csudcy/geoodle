@@ -56,6 +56,7 @@ class GeoodleControl {
                         border: 2px solid rgb(255, 255, 255);
                         border-radius: 10px;
                         padding: 5px;
+                        display: none;
                     ">
                     <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24">
                         <path d="${POINT_PATH}"/>
@@ -70,6 +71,7 @@ class GeoodleControl {
                         border: 2px solid rgb(255, 255, 255);
                         border-radius: 10px;
                         padding: 5px;
+                        display: none;
                     ">
                     <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24">
                         <path d="${SUGGESTION_PATH}"/>
