@@ -194,22 +194,16 @@ class GeoodleControl {
         this.color = color;
 
         // Update all the markers
-        this.markers.points.forEach(function(marker) {
-            marker.setIcon({
-                path: POINT_PATH,
-                fillColor: color,
-                fillOpacity: 1,
-                anchor: {x: 12, y: 12}
+        Object.keys(this.markers).forEach(function(type) {
+            this.markers[type].forEach(function(marker) {
+                marker.setIcon({
+                    path: marker.icon.path,
+                    fillColor: color,
+                    fillOpacity: marker.icon.fillOpacity,
+                    anchor: marker.icon.anchor
+                });
             });
-        });
-        this.markers.suggestions.forEach(function(marker) {
-            marker.setIcon({
-                path: POINT_PATH,
-                fillColor: color,
-                fillOpacity: 1,
-                anchor: {x: 12, y: 12}
-            });
-        });
+        }.bind(this));
 
         // Make sure the input is set correctly
         this.controls.choose_color.value = color;
