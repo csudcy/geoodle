@@ -16,11 +16,11 @@ function initMap() {
 
     // Whenever there is an update on the map, update the URL hash
     control.on('update', function() {
-        window.location.hash = JSON.stringify(control.serialise());
+        window.location.hash = btoa(JSON.stringify(control.serialise()));
     });
 
     // If there is a URL hash, use it!
     if (window.location.hash) {
-        control.deserialise(JSON.parse(window.location.hash.substr(1)));
+        control.deserialise(JSON.parse(atob(window.location.hash.substr(1))));
     }
 }
