@@ -28,9 +28,12 @@ class GeoodleControl {
         this.map = map;
         this.markers = [];
 
+        this.color = '#ff0000';
+
         this.init_controls(controlDiv);
+        this.init_control_listeners(controlDiv);
         this.init_center_marker();
-        this.init_listeners();
+        this.init_map_listeners();
     }
 
     init_controls(controlDiv) {
@@ -44,8 +47,6 @@ class GeoodleControl {
                     box-shadow: rgba(0, 0, 0, 0.298039) 0px 2px 6px;
                     cursor: pointer;
                     text-align: center;
-                    font-size: 16px;
-                    line-height: 28px;
                 ">
                 <div
                     class="add_point"
@@ -89,11 +90,39 @@ class GeoodleControl {
                         <path d="M0 0h24v24H0z" fill="none"/>
                     </svg>
                 </div>
+                <input
+                    class="choose_color"
+                    title="Set your colour"
+                    type="color"
+                    value="${this.color}"
+                    style="
+                        border: 2px solid rgb(255, 255, 255);
+                        border-radius: 10px;
+                        padding: 5px;
+                        width: 24px;
+                    ">
+                </input>
             </div>`;
+    }
 
-        // controlDiv.getElementsByClassName('recenter')[0].addEventListener('click', function() {
-        //     map.setCenter(center);
-        // });
+    init_control_listeners(controlDiv) {
+        controlDiv.getElementsByClassName('add_point')[0].addEventListener('click', function() {
+            console.log('TODO: add_point');
+        }.bind(this));
+
+        controlDiv.getElementsByClassName('add_suggestion')[0].addEventListener('click', function() {
+            console.log('TODO: add_suggestion');
+        }.bind(this));
+
+        controlDiv.getElementsByClassName('remove_all')[0].addEventListener('click', function() {
+            this.remove_all();
+            this.update_center_marker();
+            this.emit('update');
+        }.bind(this));
+
+        controlDiv.getElementsByClassName('choose_color')[0].addEventListener('change', function(e) {
+            this.set_color(e.target.value);
+        }.bind(this));
     }
 
     init_center_marker() {
@@ -101,7 +130,7 @@ class GeoodleControl {
         this.center_marker = new google.maps.Marker({
             icon: {
                 path: CENTER_PATH,
-                fillColor: 'purple',
+                fillColor: 'white',
                 fillOpacity: 1,
                 anchor: {x: 12, y: 12}
             },
@@ -110,7 +139,7 @@ class GeoodleControl {
         });
     }
 
-    init_listeners() {
+    init_map_listeners() {
         map.addListener('click', function(e) {
             this.add_marker(e.latLng);
             this.update_center_marker();
@@ -118,11 +147,27 @@ class GeoodleControl {
         }.bind(this));
     }
 
+    set_color(color) {
+        this.color = color;
+
+        // Update all the markers
+        this.markers.forEach(function(marker) {
+            marker.setIcon({
+                path: POINT_PATH,
+                fillColor: color,
+                fillOpacity: 1,
+                anchor: {x: 12, y: 12}
+            });
+        });
+
+        this.emit('update');
+    }
+
     add_marker(latLng) {
         let marker = new google.maps.Marker({
             icon: {
                 path: POINT_PATH,
-                fillColor: 'red',
+                fillColor: this.color,
                 fillOpacity: 1,
                 anchor: {x: 12, y: 12}
             },
