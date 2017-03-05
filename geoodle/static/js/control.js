@@ -17,12 +17,12 @@ const SUGGESTION_PATH = 'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.
 const CLEAR_PATH = 'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z';
 const CENTER_PATH = 'M20.94 11c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z';
 
+const POINT_ICON = '/static/icons/ic_home_black_24px.svg';
+const SUGGESTION_ICON = '/static/icons/ic_star_black_24px.svg';
+const CLEAR_ICON = '/static/icons/ic_clear_black_24px.svg';
+const CENTER_ICON = '/static/icons/ic_location_searching_black_24px.svg';
 
 class GeoodleControl {
-    // let _center = null;
-    // let _map = null;
-    // let _markers = null;
-
     constructor(controlDiv, map, center) {
         this.center = center;
         this.map = map;
@@ -52,45 +52,48 @@ class GeoodleControl {
                     class="add_point"
                     title="Add/remove points"
                     style="
-                        background: lightgrey;
+                        background: url(${POINT_ICON})
+                            darkgrey
+                            no-repeat
+                            center;
+                        width: 24px;
+                        height: 24px;
                         border: 2px solid rgb(255, 255, 255);
                         border-radius: 10px;
                         padding: 5px;
                         display: none;
                     ">
-                    <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24">
-                        <path d="${POINT_PATH}"/>
-                        <path d="M0 0h24v24H0z" fill="none"/>
-                    </svg>
                 </div>
                 <div
                     class="add_suggestion"
                     title=""
                     style="
-                        background: lightgrey;
+                        background: url(${SUGGESTION_ICON})
+                            lightgrey
+                            no-repeat
+                            center;
+                        width: 24px;
+                        height: 24px;
                         border: 2px solid rgb(255, 255, 255);
                         border-radius: 10px;
                         padding: 5px;
                         display: none;
                     ">
-                    <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24">
-                        <path d="${SUGGESTION_PATH}"/>
-                        <path d="M0 0h24v24H0z" fill="none"/>
-                    </svg>
                 </div>
                 <div
                     class="remove_all"
                     title="Remove all points & suggestions"
                     style="
-                        background: lightgrey;
+                        background: url(${CLEAR_ICON})
+                            lightgrey
+                            no-repeat
+                            center;
+                        width: 24px;
+                        height: 24px;
                         border: 2px solid rgb(255, 255, 255);
                         border-radius: 10px;
                         padding: 5px;
                     ">
-                    <svg fill="#000000" height="24" viewBox="0 0 24 24" width="24">
-                        <path d="${CLEAR_PATH}"/>
-                        <path d="M0 0h24v24H0z" fill="none"/>
-                    </svg>
                 </div>
                 <input
                     class="choose_color"
@@ -104,13 +107,29 @@ class GeoodleControl {
                         width: 24px;
                     ">
                 </input>
+                <div
+                    class="move_to_center"
+                    title="Move to current center"
+                    style="
+                        background: url(${CENTER_ICON})
+                            lightgrey
+                            no-repeat
+                            center;
+                        width: 24px;
+                        height: 24px;
+                        border: 2px solid rgb(255, 255, 255);
+                        border-radius: 10px;
+                        padding: 5px;
+                    ">
+                </div>
             </div>`;
 
         this.controls = {
             add_point: controlDiv.getElementsByClassName('add_point')[0],
             add_suggestion: controlDiv.getElementsByClassName('add_suggestion')[0],
             remove_all: controlDiv.getElementsByClassName('remove_all')[0],
-            choose_color: controlDiv.getElementsByClassName('choose_color')[0]
+            choose_color: controlDiv.getElementsByClassName('choose_color')[0],
+            move_to_center: controlDiv.getElementsByClassName('move_to_center')[0]
         }
     }
 
@@ -132,6 +151,10 @@ class GeoodleControl {
         this.controls.choose_color.addEventListener('change', function(e) {
             this.set_color(e.target.value);
             this.emit('update');
+        }.bind(this));
+
+        this.controls.move_to_center.addEventListener('click', function() {
+            this.move_to_center();
         }.bind(this));
     }
 
@@ -233,6 +256,10 @@ class GeoodleControl {
                 lng: lng
             });
         }
+    }
+
+    move_to_center() {
+        this.map.panTo(this.center_marker.getPosition());
     }
 
     serialise() {
