@@ -8,10 +8,19 @@ function initMap() {
         center: LONDON
     });
 
-    // Create the DIV to hold the control and call the CenterControl()
-    // constructor passing in this DIV.
-    let centerControlDiv = document.createElement('div');
-    let centerControl = new GeoodleControl(centerControlDiv, map, LONDON);
-    centerControlDiv.index = 1;
-    map.controls[google.maps.ControlPosition.LEFT_CENTER].push(centerControlDiv);
+    // Create the GeoodleControl
+    let controlDiv = document.createElement('div');
+    let control = new GeoodleControl(controlDiv, map, LONDON);
+    controlDiv.index = 1;
+    map.controls[google.maps.ControlPosition.LEFT_CENTER].push(controlDiv);
+
+    // Whenever there is an update on the map, update the URL hash
+    control.on('update', function() {
+        window.location.hash = JSON.stringify(control.serialise());
+    });
+
+    // If there is a URL hash, use it!
+    if (window.location.hash) {
+        control.deserialise(JSON.parse(window.location.hash.substr(1)));
+    }
 }

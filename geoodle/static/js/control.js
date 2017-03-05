@@ -113,6 +113,8 @@ class GeoodleControl {
     init_listeners() {
         map.addListener('click', function(e) {
             this.add_marker(e.latLng);
+            this.update_center_marker();
+            this.emit('update');
         }.bind(this));
     }
 
@@ -130,12 +132,16 @@ class GeoodleControl {
         });
         marker.addListener('click', function() {
             this.remove_marker(marker);
+            this.update_center_marker();
+            this.emit('update');
         }.bind(this));
         marker.addListener('drag', function() {
             this.update_center_marker();
         }.bind(this));
+        marker.addListener('dragend', function() {
+            this.emit('update');
+        }.bind(this));
         this.markers.push(marker);
-        this.update_center_marker();
     }
 
     remove_marker(marker) {
@@ -144,7 +150,13 @@ class GeoodleControl {
             this.markers.indexOf(marker),
             1
         );
-        this.update_center_marker();
+    }
+
+    remove_all() {
+        this.markers.forEach(function(marker) {
+            marker.setMap(null);
+        });
+        this.markers.length = 0;
     }
 
     update_center_marker() {
@@ -166,11 +178,55 @@ class GeoodleControl {
             });
         }
     }
+
+    serialise() {
+        /*
+        {
+            'v': 1,
+            'people': [
+                {
+                    'name': 'Nick',
+                    'color': 'purple',
+                    'points': [
+                        {
+                            lat: ...,
+                            lng: ...,
+                            label: ...
+                        },
+                        ...
+                    ],
+                    'suggestions': [
+                        {
+                            lat: ...,
+                            lng: ...,
+                            label: ...,
+                            votes: ???
+                        },
+                        ...
+                    ],
+                },
+                ...
+            ]
+        }
+        */
+        let output = [];
+        this.markers.forEach(function(marker) {
+            let latLng = marker.getPosition();
+            output.push({
+                lat: latLng.lat(),
+                lng: latLng.lng()
+            })
+        });
+        // window.location.hash
+        return output;
+    }
+
+    deserialise(input) {
+        this.remove_all();
+        input.forEach(this.add_marker.bind(this));
+        this.update_center_marker();
+        this.emit('update');
+    }
 }
 
-
-// GeoodleControl.prototype.serialise = function() {
-// }
-
-// GeoodleControl.prototype.deserialise = function() {
-// }
+Emitter(GeoodleControl.prototype);
