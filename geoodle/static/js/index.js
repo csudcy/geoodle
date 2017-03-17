@@ -9,23 +9,23 @@ function initMap() {
     });
 
     // Create the GeoodleControl
-    let controlDiv = document.createElement('div');
-    let control = new GeoodleControl(controlDiv, map, LONDON);
-    controlDiv.index = 1;
-    map.controls[google.maps.ControlPosition.LEFT_CENTER].push(controlDiv);
+    let geoodleControlDiv = document.createElement('div');
+    let geoodleControl = new GeoodleControl(geoodleControlDiv, map, LONDON);
+    geoodleControlDiv.index = 1;
+    map.controls[google.maps.ControlPosition.LEFT_CENTER].push(geoodleControlDiv);
 
     // Whenever there is an update on the map, update the URL hash
-    control.on('update', function() {
+    geoodleControl.on('update', function() {
         window.location.hash = btoa(
             JSON.stringify(
-                control.serialise()
+                geoodleControl.serialise()
             )
         );
     });
 
     // If there is a URL hash, use it!
     if (window.location.hash) {
-        control.deserialise(
+        geoodleControl.deserialise(
             JSON.parse(
                 atob(
                     window.location.hash.substr(1)
