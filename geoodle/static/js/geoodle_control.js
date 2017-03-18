@@ -1,10 +1,3 @@
-/**
- * The GeoodleControl adds a control to the map that recenters the map on
- * Chicago.
- * This constructor takes the control DIV as an argument.
- * @constructor
- */
-
 /*
 These icons are from the Material Design icon set. I have copied the SVG paths
 here as there doesn't seem to be any better way to do everything needed:

@@ -33,4 +33,10 @@ function initMap() {
             )
         );
     }
+
+    // Create the LoginControl
+    let loginControlDiv = document.createElement('div');
+    let loginControl = new LoginControl(loginControlDiv);
+    loginControlDiv.index = 1;
+    map.controls[google.maps.ControlPosition.TOP_CENTER].push(loginControlDiv);
 }
