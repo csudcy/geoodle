@@ -40,16 +40,18 @@ const BUTTONS = [
     }
 ];
 
+const MARKER_PATHS = {
+    point: POINT_PATH,
+    suggestion: SUGGESTION_PATH
+}
+
 
 class GeoodleControl {
     constructor(controlDiv, map, center) {
         this.center = center;
         this.map = map;
         this.participants = {};
-        this.markers = {
-            points: [],
-            suggestions: []
-        };
+        this.markers = [];
 
         this.color = '#ff0000';
         this.current_mode = undefined;
@@ -192,25 +194,31 @@ class GeoodleControl {
         this.color = color;
 
         // Update all the markers
-        Object.keys(this.markers).forEach(function(type) {
-            this.markers[type].forEach(function(marker) {
-                marker.setIcon({
-                    path: marker.icon.path,
-                    fillColor: color,
-                    fillOpacity: marker.icon.fillOpacity,
-                    anchor: marker.icon.anchor
-                });
+        this.markers.forEach(function(marker) {
+            marker.setIcon({
+                path: marker.icon.path,
+                fillColor: color,
+                fillOpacity: marker.icon.fillOpacity,
+                anchor: marker.icon.anchor
             });
-        }.bind(this));
+        });
 
         // Make sure the input is set correctly
         this.controls.choose_color.val(color);
     }
 
     add_point(latLng) {
+        this._add_marker('point', 0, '', latLng);
+    }
+
+    add_suggestion(latLng) {
+        this._add_marker('suggestion', 0, '', latLng);
+    }
+
+    _add_marker(type, owner, label, latLng) {
         let marker = new google.maps.Marker({
             icon: {
-                path: POINT_PATH,
+                path: MARKER_PATHS[type],
                 fillColor: this.color,
                 fillOpacity: 1,
                 anchor: {x: 12, y: 12}
@@ -219,46 +227,33 @@ class GeoodleControl {
             map: this.map,
             draggable: true
         });
+
         marker.addListener('click', function() {
-            this.remove_marker('points', marker);
+            this.remove_marker(marker);
+            // Not strictly necessary for suggestions...
             this.update_center_marker();
             this.emit('update');
         }.bind(this));
+        // Not strictly necessary for suggestions...
         marker.addListener('drag', function() {
             this.update_center_marker();
         }.bind(this));
         marker.addListener('dragend', function() {
             this.emit('update');
         }.bind(this));
-        this.markers.points.push(marker);
-    }
 
-    add_suggestion(latLng) {
-        let marker = new google.maps.Marker({
-            icon: {
-                path: SUGGESTION_PATH,
-                fillColor: this.color,
-                fillOpacity: 1,
-                anchor: {x: 12, y: 12}
-            },
-            position: latLng,
-            map: this.map,
-            draggable: true
+        this.markers.push({
+            type: type,
+            owner: owner,
+            label: label,
+            marker: marker
         });
-        marker.addListener('click', function() {
-            this.remove_marker('suggestions', marker);
-            this.emit('update');
-        }.bind(this));
-        marker.addListener('dragend', function() {
-            this.emit('update');
-        }.bind(this));
-        this.markers.suggestions.push(marker);
     }
 
-    remove_marker(type, marker) {
+    remove_marker(marker) {
         marker.setMap(null);
-        this.markers[type].splice(
-            this.markers[type].indexOf(marker),
+        this.markers.splice(
+            this.markers.indexOf(marker),
             1
         );
     }
@@ -268,30 +263,30 @@ class GeoodleControl {
             this.remove_participant(participant_id);
         }.bind(this));
 
-        this.markers.points.forEach(function(marker) {
+        this.markers.forEach(function(marker) {
             marker.setMap(null);
         });
-        this.markers.points.length = 0;
-
-        this.markers.suggestions.forEach(function(marker) {
-            marker.setMap(null);
-        });
-        this.markers.suggestions.length = 0;
+        this.markers.length = 0;
     }
 
     update_center_marker() {
-        if (this.markers.points.length <= 1) {
-            this.center_marker.setPosition(this.center);
-        } else {
-            let lat = 0,
-                lng = 0;
-            this.markers.points.forEach(function(marker) {
-                let latLng = marker.getPosition();
+        let lat = 0,
+            lng = 0,
+            point_count = 0;
+        this.markers.forEach(function(marker_info) {
+            if (marker_info.type == 'point') {
+                let latLng = marker_info.marker.getPosition();
                 lat += latLng.lat();
                 lng += latLng.lng();
-            });
-            lat /= this.markers.points.length;
-            lng /= this.markers.points.length;
+                point_count++;
+            }
+        });
+
+        if (point_count <= 1) {
+            this.center_marker.setPosition(this.center);
+        } else {
+            lat /= point_count;
+            lng /= point_count;
             this.center_marker.setPosition({
                 lat: lat,
                 lng: lng
@@ -365,53 +360,44 @@ class GeoodleControl {
                 },
                 ...
             }],
-            points: [
+            markers: [
                 {
                     owner: <participant_id>,
+                    type: <point or suggestion>,
                     lat: ...,
                     lng: ...,
                     label: ...
                 },
                 ...
-            ],
-            suggestions: [
-                {
-                    owner: <participant_id>,
-                    lat: ...,
-                    lng: ...,
-                    label: ...,
-                    votes: ???
-                },
-                ...
-            ],
+            ]
         }
         */
+
+        let markers = [];
+        this.markers.forEach(function(marker_info) {
+            let latLng = marker_info.marker.getPosition();
+            markers.push({
+                owner: marker_info.owner,
+                type: marker_info.type,
+                label: marker_info.label,
+                lat: latLng.lat(),
+                lng: latLng.lng()
+            })
+        });
+
         let output = {
             color: this.color,
-            participants: Object.values(this.participants)
+            participants: Object.values(this.participants),
+            markers: markers
         };
-
-        Object.keys(this.markers).forEach(function(type) {
-            let markers = [];
-            this.markers[type].forEach(function(marker) {
-                let latLng = marker.getPosition();
-                markers.push({
-                    lat: latLng.lat(),
-                    lng: latLng.lng()
-                })
-            });
-            output[type] = markers;
-        }.bind(this));
-
         console.log(output);
-
         return output;
     }
 
     deserialise(input) {
         this.remove_all();
 
-        // 
+        // Load participants
         input.participants.forEach(function(participant) {
             this.add_participant(
                 participant.id,
@@ -420,11 +406,21 @@ class GeoodleControl {
             );
         }.bind(this));
 
+        // TODO: Remove
         this.set_color(input.color);
-        input.points.forEach(this.add_point.bind(this));
-        if (input.suggestions) {
-            input.suggestions.forEach(this.add_suggestion.bind(this));
-        }
+
+        // Load markers
+        input.markers.forEach(function(marker_info) {
+            this._add_marker(
+                marker_info.type,
+                marker_info.owner,
+                marker_info.label,
+                {
+                    lat: marker_info.lat,
+                    lng: marker_info.lng
+                });
+        }.bind(this));
+
         this.update_center_marker();
         this.emit('update');
     }
