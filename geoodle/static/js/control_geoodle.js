@@ -350,6 +350,8 @@ class GeoodleControl {
         Object.keys(this.participants).forEach(
             participant_id => this.remove_participant(participant_id)
         );
+        this.update_center_marker();
+        this.emit('update');
     }
 
     serialise() {
