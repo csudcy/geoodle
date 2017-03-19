@@ -22,6 +22,7 @@ Cool things which inspired me or I'm making use of in this project (in no partic
   * ~~Click points to remove them~~
   * ~~Shows the geographical midpoint~~
   * ~~Client-side only (state is in the URL)~~
+  * ~~Add participants~~
 * Login (by name to start with, by social login later)
   * Later: Set your mode of transport
 * Create a geopoll
@@ -33,7 +34,8 @@ Cool things which inspired me or I'm making use of in this project (in no partic
 * ~~Geoodle will tell you the central point of all locations~~
 * You can add suggestions of where to go
   * Later: Show approximate transport times/routes
-* People can vote on which suggestions they like (or refuse to go to!)
+  * People can vote on which suggestions they like (or refuse to go to!)
+* Better style for participant control
 * Make loading more robust
 
 Things which might come later:

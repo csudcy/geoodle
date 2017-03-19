@@ -22,8 +22,8 @@ class GeoodleParticipantControl {
                     text-align: center;
                 ">
                 Participants:
-                <ul class="participant_list">
-                </ul>
+                <div class="participant_list">
+                </div>
                 <button
                     class="add_participant">
                     Add Participant
@@ -43,18 +43,20 @@ class GeoodleParticipantControl {
 
     get_participant_html(id, name, color) {
         return `
-            <li
+            <div
                 participant_id="${id}">
+                <input
+                    type="radio"
+                    name="selected_participant">
                 <input
                     class="participant_color"
                     title="Set participant colour"
                     type="color"
                     value="${color}"
                     style="
-                        border: 2px solid rgb(255, 255, 255);
-                        border-radius: 10px;
-                        padding: 5px;
-                        width: 24px;
+                        border: none;
+                        border-radius: 5px;
+                        width: 20px;
                     "/>
                 <input
                     class="participant_name"
@@ -66,7 +68,7 @@ class GeoodleParticipantControl {
                     class="remove_participant">
                     X
                 </button>
-            </li>`;
+            </div>`;
     }
 
     init_control_listeners() {
@@ -75,6 +77,12 @@ class GeoodleParticipantControl {
         this.controls.add_participant.click(function() {
             this.geoodleControl.add_participant(null, 'A participant', '#ff0000');
         }.bind(this));
+
+        this.controlDiv.on('change', '[name="selected_participant"]', function(e) {
+            let target = $(e.target);
+            let id = target.parent().attr('participant_id');
+            this.geoodleControl.set_selected_participant(id);
+        }.bind(this))
 
         this.controlDiv.on('change', '.participant_color', function(e) {
             let target = $(e.target);
@@ -93,8 +101,6 @@ class GeoodleParticipantControl {
             let id = target.parent().attr('participant_id');
             this.geoodleControl.remove_participant(id);
         }.bind(this))
-
-        // TODO: Set selected
 
         this.controlDiv.on('click', '.remove_all_participants', function(e) {
             this.geoodleControl.remove_all_participants();
@@ -125,8 +131,8 @@ class GeoodleParticipantControl {
         }.bind(this));
 
         this.geoodleControl.on('set_selected_participant', function(participant_id) {
-            console.log('set_selected_participant');
-            console.log(participant_id);
+            let selected_participant = this.controlDiv.find(`[participant_id=${participant_id}] input[type="radio"]`);
+            selected_participant.prop('checked', true);
         }.bind(this));
     }
 }

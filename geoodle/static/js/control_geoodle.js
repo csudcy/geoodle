@@ -54,6 +54,7 @@ class GeoodleControl {
         this.markers = [];
 
         this.current_mode = undefined;
+        this.selected_participant_id = null;
 
         this.init_controls(controlDiv);
         this.init_control_listeners();
@@ -184,18 +185,24 @@ class GeoodleControl {
     }
 
     add_point(latLng) {
-        this._add_marker('point', 0, '', latLng);
+        this._add_marker('point', null, '', latLng);
     }
 
     add_suggestion(latLng) {
-        this._add_marker('suggestion', 0, '', latLng);
+        this._add_marker('suggestion', null, '', latLng);
     }
 
     _add_marker(type, owner, label, latLng) {
         if (owner === null) {
-            // TODO: Check a participant is selected
-            // TODO: Alert if no selected participant
-            owner = 0;
+            if (this.selected_participant_id === null) {
+                if (Object.keys(this.participants).length === 0) {
+                    alert('You must add & select a participant before adding any markers!');
+                } else {
+                    alert('You must select a participant before adding any markers!');
+                }
+                return;
+            }
+            owner = this.selected_participant_id;
         }
 
         let marker = new google.maps.Marker({
@@ -320,7 +327,10 @@ class GeoodleControl {
             marker_info => this.remove_marker(marker_info.marker)
         );
 
-        // TODO: Unset selected participant if necessary
+        // Unset selected participant if necessary
+        if (this.selected_participant_id === id) {
+            this.set_selected_participant(null);
+        }
 
         // Let listeners know what's going on
         this.emit('remove_participant', id);
@@ -328,7 +338,8 @@ class GeoodleControl {
     }
 
     set_selected_participant(id) {
-        // TODO: Set selected participant
+        // Set selected participant
+        this.selected_participant_id = id;
 
         // Let listeners know what's going on
         this.emit('set_selected_participant', id);
@@ -411,6 +422,12 @@ class GeoodleControl {
                 }
             )
         );
+
+        // Select the first participant
+        let participant_ids = Object.keys(this.participants);
+        if (participant_ids.length > 0) {
+            this.set_selected_participant(participant_ids[0]);
+        }
 
         this.update_center_marker();
         this.emit('update');
