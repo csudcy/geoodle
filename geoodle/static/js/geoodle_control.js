@@ -14,6 +14,32 @@ const POINT_ICON = '/static/icons/ic_home_black_24px.svg';
 const SUGGESTION_ICON = '/static/icons/ic_star_black_24px.svg';
 const CLEAR_ICON = '/static/icons/ic_clear_black_24px.svg';
 const CENTER_ICON = '/static/icons/ic_location_searching_black_24px.svg';
+const HELP_ICON = '/static/icons/ic_help_outline_black_24px.svg';
+
+const BUTTONS = [
+    {
+        klass: 'add_point',
+        text: 'Add/remove points',
+        icon: POINT_ICON
+    }, {
+        klass: 'add_suggestion',
+        text: 'Add/remove suggestions',
+        icon: SUGGESTION_ICON
+    }, {
+        klass: 'remove_all',
+        text: 'Remove all points & suggestions',
+        icon: CLEAR_ICON
+    }, {
+        klass: 'move_to_center',
+        text: 'Move to current center',
+        icon: CENTER_ICON
+    }, {
+        klass: 'show_hide_help',
+        text: 'Show/hide help',
+        icon: HELP_ICON
+    }
+];
+
 
 class GeoodleControl {
     constructor(controlDiv, map, center) {
@@ -33,8 +59,33 @@ class GeoodleControl {
         this.init_map_listeners();
     }
 
-    init_controls(controlDiv) {
-        controlDiv.innerHTML = `
+    init_controls(controlDivElement) {
+        let controlDiv = $(controlDivElement);
+
+        let BUTTON_HTML = '';
+        BUTTONS.forEach(function(button) {
+            BUTTON_HTML += `
+                <div class="${button['klass']}" title="${button['text']}" style="
+                    background: darkgrey;
+                    border: 2px solid rgb(255, 255, 255);
+                    border-radius: 10px;
+                    padding: 5px;
+                ">
+                    <div title="${button['text']}" style="
+                            background: url(${button['icon']})
+                                no-repeat
+                                center;
+                            min-width: 24px;
+                            height: 24px;
+                        ">
+                    </div>
+                    <div class="control_label" style="display: none;">
+                        ${button['text']}
+                    </div>
+                </div>
+                `;
+        });
+        controlDiv.html(`
             <div
                 class="container"
                 style="
@@ -45,51 +96,7 @@ class GeoodleControl {
                     cursor: pointer;
                     text-align: center;
                 ">
-                <div
-                    class="add_point"
-                    title="Add/remove points"
-                    style="
-                        background: url(${POINT_ICON})
-                            darkgrey
-                            no-repeat
-                            center;
-                        width: 24px;
-                        height: 24px;
-                        border: 2px solid rgb(255, 255, 255);
-                        border-radius: 10px;
-                        padding: 5px;
-                    ">
-                </div>
-                <div
-                    class="add_suggestion"
-                    title=""
-                    style="
-                        background: url(${SUGGESTION_ICON})
-                            lightgrey
-                            no-repeat
-                            center;
-                        width: 24px;
-                        height: 24px;
-                        border: 2px solid rgb(255, 255, 255);
-                        border-radius: 10px;
-                        padding: 5px;
-                    ">
-                </div>
-                <div
-                    class="remove_all"
-                    title="Remove all points & suggestions"
-                    style="
-                        background: url(${CLEAR_ICON})
-                            lightgrey
-                            no-repeat
-                            center;
-                        width: 24px;
-                        height: 24px;
-                        border: 2px solid rgb(255, 255, 255);
-                        border-radius: 10px;
-                        padding: 5px;
-                    ">
-                </div>
+                ${BUTTON_HTML}
                 <input
                     class="choose_color"
                     title="Set your colour"
@@ -102,58 +109,51 @@ class GeoodleControl {
                         width: 24px;
                     ">
                 </input>
-                <div
-                    class="move_to_center"
-                    title="Move to current center"
-                    style="
-                        background: url(${CENTER_ICON})
-                            lightgrey
-                            no-repeat
-                            center;
-                        width: 24px;
-                        height: 24px;
-                        border: 2px solid rgb(255, 255, 255);
-                        border-radius: 10px;
-                        padding: 5px;
-                    ">
-                </div>
-            </div>`;
+            </div>`);
 
         this.controls = {
-            add_point: controlDiv.getElementsByClassName('add_point')[0],
-            add_suggestion: controlDiv.getElementsByClassName('add_suggestion')[0],
-            remove_all: controlDiv.getElementsByClassName('remove_all')[0],
-            choose_color: controlDiv.getElementsByClassName('choose_color')[0],
-            move_to_center: controlDiv.getElementsByClassName('move_to_center')[0]
+            add_point: controlDiv.find('.add_point'),
+            add_suggestion: controlDiv.find('.add_suggestion'),
+            remove_all: controlDiv.find('.remove_all'),
+            move_to_center: controlDiv.find('.move_to_center'),
+            show_hide_help: controlDiv.find('.show_hide_help'),
+            choose_color: controlDiv.find('.choose_color')
         }
+
+        this.control_labels = controlDiv.find('.control_label');
     }
 
     init_control_listeners() {
-        this.controls.add_point.addEventListener('click', function() {
+        this.controls.add_point.click(function() {
             this.current_mode = 'points';
-            this.controls.add_point.style['background-color'] = 'darkgrey';
-            this.controls.add_suggestion.style['background-color'] = 'lightgrey';
+            this.controls.add_point.css('background-color', 'darkgrey');
+            this.controls.add_suggestion.css('background-color', 'lightgrey');
         }.bind(this));
 
-        this.controls.add_suggestion.addEventListener('click', function() {
+        this.controls.add_suggestion.click(function() {
             this.current_mode = 'suggestions';
-            this.controls.add_point.style['background-color'] = 'lightgrey';
-            this.controls.add_suggestion.style['background-color'] = 'darkgrey';
+            this.controls.add_point.css('background-color', 'lightgrey');
+            this.controls.add_suggestion.css('background-color', 'darkgrey');
         }.bind(this));
 
-        this.controls.remove_all.addEventListener('click', function() {
+        this.controls.remove_all.click(function() {
             this.remove_all();
             this.update_center_marker();
             this.emit('update');
         }.bind(this));
 
-        this.controls.choose_color.addEventListener('change', function(e) {
-            this.set_color(e.target.value);
-            this.emit('update');
+        this.controls.move_to_center.click(function() {
+            this.move_to_center();
         }.bind(this));
 
-        this.controls.move_to_center.addEventListener('click', function() {
-            this.move_to_center();
+        this.controls.show_hide_help.click(function() {
+            // this.show_hide_help();
+            this.control_labels.toggle();
+        }.bind(this));
+
+        this.controls.choose_color.change(function(e) {
+            this.set_color(e.target.value);
+            this.emit('update');
         }.bind(this));
     }
 
@@ -199,7 +199,7 @@ class GeoodleControl {
         }.bind(this));
 
         // Make sure the input is set correctly
-        this.controls.choose_color.value = color;
+        this.controls.choose_color.val(color);
     }
 
     add_point(latLng) {
