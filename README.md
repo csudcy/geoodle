@@ -34,6 +34,7 @@ Cool things which inspired me or I'm making use of in this project (in no partic
 * You can add suggestions of where to go
   * Later: Show approximate transport times/routes
 * People can vote on which suggestions they like (or refuse to go to!)
+* Make loading more robust
 
 Things which might come later:
 

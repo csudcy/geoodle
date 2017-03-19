@@ -28,10 +28,15 @@ class GeoodleParticipantControl {
                     class="add_participant">
                     Add Participant
                 </button>
+                <button
+                    class="remove_all_participants">
+                    Clear Participants
+                </button>
             </div>`);
 
         this.controls = {
             participant_list: this.controlDiv.find('.participant_list'),
+            remove_all_participants: this.controlDiv.find('.remove_all_participants'),
             add_participant: this.controlDiv.find('.add_participant')
         }
     }
@@ -90,6 +95,10 @@ class GeoodleParticipantControl {
         }.bind(this))
 
         // TODO: Set selected
+
+        this.controlDiv.on('click', '.remove_all_participants', function(e) {
+            this.geoodleControl.remove_all_participants();
+        }.bind(this))
     }
 
     init_listeners() {

@@ -26,8 +26,8 @@ const BUTTONS = [
         text: 'Add suggestions',
         icon: SUGGESTION_ICON
     }, {
-        klass: 'remove_all',
-        text: 'Remove all points & suggestions',
+        klass: 'remove_all_markers',
+        text: 'Clear points & suggestions',
         icon: CLEAR_ICON
     }, {
         klass: 'move_to_center',
@@ -53,7 +53,6 @@ class GeoodleControl {
         this.participants = {};
         this.markers = [];
 
-        this.color = '#ff0000';
         this.current_mode = undefined;
 
         this.init_controls(controlDiv);
@@ -102,27 +101,14 @@ class GeoodleControl {
                     text-align: center;
                 ">
                 ${BUTTON_HTML}
-                <input
-                    class="choose_color"
-                    title="Set your colour"
-                    type="color"
-                    value="${this.color}"
-                    style="
-                        border: 2px solid rgb(255, 255, 255);
-                        border-radius: 10px;
-                        padding: 5px;
-                        width: 24px;
-                    ">
-                </input>
             </div>`);
 
         this.controls = {
             add_point: controlDiv.find('.add_point'),
             add_suggestion: controlDiv.find('.add_suggestion'),
-            remove_all: controlDiv.find('.remove_all'),
+            remove_all_markers: controlDiv.find('.remove_all_markers'),
             move_to_center: controlDiv.find('.move_to_center'),
-            show_hide_help: controlDiv.find('.show_hide_help'),
-            choose_color: controlDiv.find('.choose_color')
+            show_hide_help: controlDiv.find('.show_hide_help')
         }
 
         this.control_labels = controlDiv.find('.control_label');
@@ -137,8 +123,8 @@ class GeoodleControl {
             this.set_current_mode('suggestions');
         }.bind(this));
 
-        this.controls.remove_all.click(function() {
-            this.remove_all();
+        this.controls.remove_all_markers.click(function() {
+            this.remove_all_markers();
             this.update_center_marker();
             this.emit('update');
         }.bind(this));
@@ -148,13 +134,7 @@ class GeoodleControl {
         }.bind(this));
 
         this.controls.show_hide_help.click(function() {
-            // this.show_hide_help();
             this.control_labels.toggle();
-        }.bind(this));
-
-        this.controls.choose_color.change(function(e) {
-            this.set_color(e.target.value);
-            this.emit('update');
         }.bind(this));
     }
 
@@ -190,21 +170,17 @@ class GeoodleControl {
         }.bind(this));
     }
 
-    set_color(color) {
-        this.color = color;
-
+    update_marker_colors() {
         // Update all the markers
-        this.markers.forEach(function(marker) {
+        this.markers.forEach(function(marker_info) {
+            let marker = marker_info.marker;
             marker.setIcon({
                 path: marker.icon.path,
-                fillColor: color,
+                fillColor: this.participants[marker_info.owner].color,
                 fillOpacity: marker.icon.fillOpacity,
                 anchor: marker.icon.anchor
             });
-        });
-
-        // Make sure the input is set correctly
-        this.controls.choose_color.val(color);
+        }.bind(this));
     }
 
     add_point(latLng) {
@@ -216,10 +192,16 @@ class GeoodleControl {
     }
 
     _add_marker(type, owner, label, latLng) {
+        if (owner === null) {
+            // TODO: Check a participant is selected
+            // TODO: Alert if no selected participant
+            owner = 0;
+        }
+
         let marker = new google.maps.Marker({
             icon: {
                 path: MARKER_PATHS[type],
-                fillColor: this.color,
+                fillColor: this.participants[owner].color,
                 fillOpacity: 1,
                 anchor: {x: 12, y: 12}
             },
@@ -252,19 +234,15 @@ class GeoodleControl {
 
     remove_marker(marker) {
         marker.setMap(null);
-        this.markers.splice(
-            this.markers.indexOf(marker),
-            1
+
+        this.markers = this.markers.filter(
+            marker_info => marker_info.marker !== marker
         );
     }
 
-    remove_all() {
-        Object.keys(this.participants).forEach(function(participant_id) {
-            this.remove_participant(participant_id);
-        }.bind(this));
-
-        this.markers.forEach(function(marker) {
-            marker.setMap(null);
+    remove_all_markers() {
+        this.markers.forEach(function(marker_info) {
+            marker_info.marker.setMap(null);
         });
         this.markers.length = 0;
     }
@@ -323,7 +301,8 @@ class GeoodleControl {
         // Update the participant
         this.participants[id][attr] = value;
 
-        // TODO: Update marker color if necessary
+        // Update marker colours
+        this.update_marker_colors();
 
         // Let listeners know what's going on
         this.emit('update_participant', this.participants[id]);
@@ -334,7 +313,14 @@ class GeoodleControl {
         // Remove the participant
         delete this.participants[id];
 
-        // TODO: Remove the participants markers
+        // Remove the participants markers
+        this.markers.filter(
+            marker_info => marker_info.owner == id
+        ).forEach(
+            marker_info => this.remove_marker(marker_info.marker)
+        );
+
+        // TODO: Unset selected participant if necessary
 
         // Let listeners know what's going on
         this.emit('remove_participant', id);
@@ -347,6 +333,12 @@ class GeoodleControl {
         // Let listeners know what's going on
         this.emit('set_selected_participant', id);
         this.emit('update');
+    }
+
+    remove_all_participants() {
+        Object.keys(this.participants).forEach(
+            participant_id => this.remove_participant(participant_id)
+        );
     }
 
     serialise() {
@@ -395,31 +387,30 @@ class GeoodleControl {
     }
 
     deserialise(input) {
-        this.remove_all();
+        this.remove_all_markers();
+        this.remove_all_participants();
 
         // Load participants
-        input.participants.forEach(function(participant) {
-            this.add_participant(
+        input.participants.forEach(
+            participant => this.add_participant(
                 participant.id,
                 participant.name,
                 participant.color
-            );
-        }.bind(this));
-
-        // TODO: Remove
-        this.set_color(input.color);
+            )
+        );
 
         // Load markers
-        input.markers.forEach(function(marker_info) {
-            this._add_marker(
+        input.markers.forEach(
+            marker_info => this._add_marker(
                 marker_info.type,
                 marker_info.owner,
                 marker_info.label,
                 {
                     lat: marker_info.lat,
                     lng: marker_info.lng
-                });
-        }.bind(this));
+                }
+            )
+        );
 
         this.update_center_marker();
         this.emit('update');
