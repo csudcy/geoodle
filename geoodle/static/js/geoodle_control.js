@@ -51,12 +51,14 @@ class GeoodleControl {
         };
 
         this.color = '#ff0000';
-        this.current_mode = 'points';
+        this.current_mode = undefined;
 
         this.init_controls(controlDiv);
         this.init_control_listeners();
         this.init_center_marker();
         this.init_map_listeners();
+
+        this.set_current_mode('points');
     }
 
     init_controls(controlDivElement) {
@@ -66,7 +68,7 @@ class GeoodleControl {
         BUTTONS.forEach(function(button) {
             BUTTON_HTML += `
                 <div class="${button['klass']}" title="${button['text']}" style="
-                    background: darkgrey;
+                    background: lightgrey;
                     border: 2px solid rgb(255, 255, 255);
                     border-radius: 10px;
                     padding: 5px;
@@ -125,15 +127,11 @@ class GeoodleControl {
 
     init_control_listeners() {
         this.controls.add_point.click(function() {
-            this.current_mode = 'points';
-            this.controls.add_point.css('background-color', 'darkgrey');
-            this.controls.add_suggestion.css('background-color', 'lightgrey');
+            this.set_current_mode('points');
         }.bind(this));
 
         this.controls.add_suggestion.click(function() {
-            this.current_mode = 'suggestions';
-            this.controls.add_point.css('background-color', 'lightgrey');
-            this.controls.add_suggestion.css('background-color', 'darkgrey');
+            this.set_current_mode('suggestions');
         }.bind(this));
 
         this.controls.remove_all.click(function() {
@@ -155,6 +153,12 @@ class GeoodleControl {
             this.set_color(e.target.value);
             this.emit('update');
         }.bind(this));
+    }
+
+    set_current_mode(current_mode) {
+        this.current_mode = current_mode;
+        this.controls.add_point.css('background-color', current_mode == 'points' ? 'darkgrey' : 'lightgrey');
+        this.controls.add_suggestion.css('background-color', current_mode == 'suggestions' ? 'darkgrey' : 'lightgrey');
     }
 
     init_center_marker() {
