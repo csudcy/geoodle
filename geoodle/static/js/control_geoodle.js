@@ -388,13 +388,11 @@ class GeoodleControl {
             })
         });
 
-        let output = {
+        return {
             color: this.color,
             participants: Object.values(this.participants),
             markers: markers
         };
-        console.log(output);
-        return output;
     }
 
     deserialise(input) {
