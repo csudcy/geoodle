@@ -14,6 +14,15 @@ function initMap() {
     geoodleControlDiv.index = 1;
     map.controls[google.maps.ControlPosition.LEFT_CENTER].push(geoodleControlDiv);
 
+    // Create the GeoodleParticipantControl
+    let geoodleParticipantControlDiv = document.createElement('div');
+    let geoodleParticipantControl = new GeoodleParticipantControl(
+        geoodleParticipantControlDiv,
+        geoodleControl
+    );
+    geoodleParticipantControlDiv.index = 1;
+    map.controls[google.maps.ControlPosition.TOP_CENTER].push(geoodleParticipantControlDiv);
+
     // Whenever there is an update on the map, update the URL hash
     geoodleControl.on('update', function() {
         window.location.hash = btoa(
@@ -35,8 +44,8 @@ function initMap() {
     }
 
     // Create the LoginControl
-    let loginControlDiv = document.createElement('div');
-    let loginControl = new LoginControl(loginControlDiv);
-    loginControlDiv.index = 1;
+    // let loginControlDiv = document.createElement('div');
+    // let loginControl = new LoginControl(loginControlDiv);
+    // loginControlDiv.index = 1;
     // map.controls[google.maps.ControlPosition.TOP_CENTER].push(loginControlDiv);
 }
