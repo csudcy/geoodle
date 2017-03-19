@@ -1,13 +1,16 @@
 
 class GeoodleParticipantControl {
     constructor(controlDiv, geoodleControl) {
-        this.init_controls(controlDiv);
+        this.controlDiv = $(controlDiv);
+        this.geoodleControl = geoodleControl;
+
+        this.init_controls();
+        this.init_control_listeners();
+        this.init_listeners();
     }
 
-    init_controls(controlDivElement) {
-        let controlDiv = $(controlDivElement);
-
-        controlDiv.html(`
+    init_controls() {
+        this.controlDiv.html(`
             <div
                 class="container"
                 style="
@@ -19,40 +22,102 @@ class GeoodleParticipantControl {
                     text-align: center;
                 ">
                 Participants:
-                <ul>
-                    <li>
-                        <input
-                            class="participant_colour"
-                            title="Set your colour"
-                            type="color"
-                            value="${this.color}"
-                            style="
-                                border: 2px solid rgb(255, 255, 255);
-                                border-radius: 10px;
-                                padding: 5px;
-                                width: 24px;
-                            "/>
-                        <input
-                            class="participant_name"
-                            title="Enter participants name"
-                            type="text"
-                            value="Default participant"
-                            />
-                    </li>
+                <ul class="participant_list">
                 </ul>
-                <button>Add Participant</button>
+                <button
+                    class="add_participant">
+                    Add Participant
+                </button>
             </div>`);
 
-        // this.controls = {
-        //     add_point: controlDiv.find('.add_point'),
-        //     add_suggestion: controlDiv.find('.add_suggestion'),
-        //     remove_all: controlDiv.find('.remove_all'),
-        //     move_to_center: controlDiv.find('.move_to_center'),
-        //     show_hide_help: controlDiv.find('.show_hide_help'),
-        //     choose_color: controlDiv.find('.choose_color')
-        // }
-
-        // this.control_labels = controlDiv.find('.control_label');
+        this.controls = {
+            participant_list: this.controlDiv.find('.participant_list'),
+            add_participant: this.controlDiv.find('.add_participant')
+        }
     }
 
+    get_participant_html(id, name, color) {
+        return `
+            <li
+                participant_id="${id}">
+                <input
+                    class="participant_color"
+                    title="Set participant colour"
+                    type="color"
+                    value="${color}"
+                    style="
+                        border: 2px solid rgb(255, 255, 255);
+                        border-radius: 10px;
+                        padding: 5px;
+                        width: 24px;
+                    "/>
+                <input
+                    class="participant_name"
+                    title="Enter participants name"
+                    type="text"
+                    value="${name}"
+                    />
+                <button
+                    class="remove_participant">
+                    X
+                </button>
+            </li>`;
+    }
+
+    init_control_listeners() {
+        // Send events to GeoodleControl
+
+        this.controls.add_participant.click(function() {
+            this.geoodleControl.add_participant(null, 'A participant', '#ff0000');
+        }.bind(this));
+
+        this.controlDiv.on('change', '.participant_color', function(e) {
+            let target = $(e.target);
+            let id = target.parent().attr('participant_id');
+            this.geoodleControl.update_participant(id, 'color', target.val());
+        }.bind(this))
+
+        this.controlDiv.on('change', '.participant_name', function(e) {
+            let target = $(e.target);
+            let id = target.parent().attr('participant_id');
+            this.geoodleControl.update_participant(id, 'name', target.val());
+        }.bind(this))
+
+        this.controlDiv.on('click', '.remove_participant', function(e) {
+            let target = $(e.target);
+            let id = target.parent().attr('participant_id');
+            this.geoodleControl.remove_participant(id);
+        }.bind(this))
+
+        // TODO: Set selected
+    }
+
+    init_listeners() {
+        // Update UI state from GeoodleControl events
+
+        this.geoodleControl.on('add_participant', function(participant) {
+            this.controls.participant_list.append(
+                this.get_participant_html(
+                    participant.id,
+                    participant.name,
+                    participant.color
+                )
+            );
+        }.bind(this));
+
+        this.geoodleControl.on('update_participant', function(participant) {
+            let participant_element = this.controlDiv.find(`[participant_id=${participant.id}]`);
+            participant_element.find('.participant_color').val(participant.color);
+            participant_element.find('.participant_name').val(participant.name);
+        }.bind(this));
+
+        this.geoodleControl.on('remove_participant', function(participant_id) {
+            this.controlDiv.find(`[participant_id=${participant_id}]`).remove();
+        }.bind(this));
+
+        this.geoodleControl.on('set_selected_participant', function(participant_id) {
+            console.log('set_selected_participant');
+            console.log(participant_id);
+        }.bind(this));
+    }
 }

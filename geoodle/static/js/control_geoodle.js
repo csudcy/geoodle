@@ -2,7 +2,7 @@
 These icons are from the Material Design icon set. I have copied the SVG paths
 here as there doesn't seem to be any better way to do everything needed:
  * Be able to use them as map marker icons
- * Be able to set their fill colour
+ * Be able to set their fill color
  * Be able to use them in the controls
 */
 const POINT_PATH = 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z';
@@ -19,11 +19,11 @@ const HELP_ICON = '/static/icons/ic_help_outline_black_24px.svg';
 const BUTTONS = [
     {
         klass: 'add_point',
-        text: 'Add/remove points',
+        text: 'Add points',
         icon: POINT_ICON
     }, {
         klass: 'add_suggestion',
-        text: 'Add/remove suggestions',
+        text: 'Add suggestions',
         icon: SUGGESTION_ICON
     }, {
         klass: 'remove_all',
@@ -45,6 +45,7 @@ class GeoodleControl {
     constructor(controlDiv, map, center) {
         this.center = center;
         this.map = map;
+        this.participants = {};
         this.markers = {
             points: [],
             suggestions: []
@@ -263,6 +264,10 @@ class GeoodleControl {
     }
 
     remove_all() {
+        Object.keys(this.participants).forEach(function(participant_id) {
+            this.remove_participant(participant_id);
+        }.bind(this));
+
         this.markers.points.forEach(function(marker) {
             marker.setMap(null);
         });
@@ -298,38 +303,92 @@ class GeoodleControl {
         this.map.panTo(this.center_marker.getPosition());
     }
 
+    add_participant(id, name, color) {
+        if (id === null) {
+            // Find an id for this participant
+            id = 0;
+            while (this.participants[id] !== undefined) {
+                id++;
+            }
+        }
+
+        // Add them to the list of participants
+        this.participants[id] = {
+            id: id,
+            name: name,
+            color: color
+        };
+
+        // Let listeners know what's going on
+        this.emit('add_participant', this.participants[id]);
+        this.emit('update');
+    }
+
+    update_participant(id, attr, value) {
+        // Update the participant
+        this.participants[id][attr] = value;
+
+        // TODO: Update marker color if necessary
+
+        // Let listeners know what's going on
+        this.emit('update_participant', this.participants[id]);
+        this.emit('update');
+    }
+
+    remove_participant(id) {
+        // Remove the participant
+        delete this.participants[id];
+
+        // TODO: Remove the participants markers
+
+        // Let listeners know what's going on
+        this.emit('remove_participant', id);
+        this.emit('update');
+    }
+
+    set_selected_participant(id) {
+        // TODO: Set selected participant
+
+        // Let listeners know what's going on
+        this.emit('set_selected_participant', id);
+        this.emit('update');
+    }
+
     serialise() {
         /*
         {
-            'v': 1,
-            'people': [
+            participants: [
                 {
-                    'name': 'Nick',
-                    'color': 'purple',
-                    'points': [
-                        {
-                            lat: ...,
-                            lng: ...,
-                            label: ...
-                        },
-                        ...
-                    ],
-                    'suggestions': [
-                        {
-                            lat: ...,
-                            lng: ...,
-                            label: ...,
-                            votes: ???
-                        },
-                        ...
-                    ],
+                    id: 1,
+                    name: 'Nick',
+                    color: 'purple',
                 },
                 ...
-            ]
+            }],
+            points: [
+                {
+                    owner: <participant_id>,
+                    lat: ...,
+                    lng: ...,
+                    label: ...
+                },
+                ...
+            ],
+            suggestions: [
+                {
+                    owner: <participant_id>,
+                    lat: ...,
+                    lng: ...,
+                    label: ...,
+                    votes: ???
+                },
+                ...
+            ],
         }
         */
         let output = {
-            color: this.color
+            color: this.color,
+            participants: Object.values(this.participants)
         };
 
         Object.keys(this.markers).forEach(function(type) {
@@ -344,11 +403,23 @@ class GeoodleControl {
             output[type] = markers;
         }.bind(this));
 
+        console.log(output);
+
         return output;
     }
 
     deserialise(input) {
         this.remove_all();
+
+        // 
+        input.participants.forEach(function(participant) {
+            this.add_participant(
+                participant.id,
+                participant.name,
+                participant.color
+            );
+        }.bind(this));
+
         this.set_color(input.color);
         input.points.forEach(this.add_point.bind(this));
         if (input.suggestions) {
