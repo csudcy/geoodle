@@ -363,9 +363,9 @@ class GeoodleControl {
     get_selected_participant() {
         if (this.selected_participant_id === null) {
             if (Object.keys(this.participants).length === 0) {
-                alert('You must add & select a participant before adding any markers!');
+                alert('You need to add a participant');
             } else {
-                alert('You must select a participant before adding any markers!');
+                alert('You need to select a participant');
             }
             return;
         }
