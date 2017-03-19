@@ -346,6 +346,8 @@ class GeoodleControl {
             this.set_selected_participant(null);
         }
 
+        this.update_center_marker();
+
         // Let listeners know what's going on
         this.emit('remove_participant', id);
         this.emit('update');
@@ -360,7 +362,7 @@ class GeoodleControl {
         this.emit('update');
     }
 
-    get_selected_participant() {
+    get_selected_participant() { 
         if (this.selected_participant_id === null) {
             if (Object.keys(this.participants).length === 0) {
                 alert('You need to add a participant');
