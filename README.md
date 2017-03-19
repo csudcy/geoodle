@@ -23,6 +23,7 @@ Cool things which inspired me or I'm making use of in this project (in no partic
   * ~~Shows the geographical midpoint~~
   * ~~Client-side only (state is in the URL)~~
   * ~~Add participants~~
+  * ~~Only remove icons of the currently active participant~~
 * Login (by name to start with, by social login later)
   * Later: Set your mode of transport
 * Create a geopoll

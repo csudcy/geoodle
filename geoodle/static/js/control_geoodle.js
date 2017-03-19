@@ -194,15 +194,8 @@ class GeoodleControl {
 
     _add_marker(type, owner, label, latLng) {
         if (owner === null) {
-            if (this.selected_participant_id === null) {
-                if (Object.keys(this.participants).length === 0) {
-                    alert('You must add & select a participant before adding any markers!');
-                } else {
-                    alert('You must select a participant before adding any markers!');
-                }
-                return;
-            }
-            owner = this.selected_participant_id;
+            owner = this.get_selected_participant();
+            if (owner === undefined) return;
         }
 
         let marker = new google.maps.Marker({
@@ -240,6 +233,23 @@ class GeoodleControl {
     }
 
     remove_marker(marker) {
+        // Check this marker can be removed
+        let owner = this.get_selected_participant();
+        if (owner === undefined) return;
+
+        let marker_info = this.markers.find(
+            marker_info => marker_info.marker == marker
+        );
+        if (marker_info.owner !== owner) {
+            alert('You cannot remove other participants markers!');
+            return;
+        }
+
+        this._remove_marker(marker);
+    }
+
+    _remove_marker(marker) {
+        // Remove the given marker
         marker.setMap(null);
 
         this.markers = this.markers.filter(
@@ -248,10 +258,14 @@ class GeoodleControl {
     }
 
     remove_all_markers() {
-        this.markers.forEach(function(marker_info) {
-            marker_info.marker.setMap(null);
-        });
-        this.markers.length = 0;
+        let owner = this.get_selected_participant();
+        if (owner === undefined) return;
+
+        this.markers.filter(
+            marker_info => marker_info.owner == owner
+        ).forEach(
+            marker_info => this.remove_marker(marker_info.marker)
+        );
     }
 
     update_center_marker() {
@@ -324,7 +338,7 @@ class GeoodleControl {
         this.markers.filter(
             marker_info => marker_info.owner == id
         ).forEach(
-            marker_info => this.remove_marker(marker_info.marker)
+            marker_info => this._remove_marker(marker_info.marker)
         );
 
         // Unset selected participant if necessary
@@ -344,6 +358,18 @@ class GeoodleControl {
         // Let listeners know what's going on
         this.emit('set_selected_participant', id);
         this.emit('update');
+    }
+
+    get_selected_participant() {
+        if (this.selected_participant_id === null) {
+            if (Object.keys(this.participants).length === 0) {
+                alert('You must add & select a participant before adding any markers!');
+            } else {
+                alert('You must select a participant before adding any markers!');
+            }
+            return;
+        }
+        return this.selected_participant_id;
     }
 
     remove_all_participants() {
@@ -398,7 +424,7 @@ class GeoodleControl {
     }
 
     deserialise(input) {
-        this.remove_all_markers();
+        // Remove all participants & markers
         this.remove_all_participants();
 
         // Load participants
