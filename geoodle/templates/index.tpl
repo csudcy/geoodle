@@ -19,6 +19,7 @@
 
 {% block scripts%}
     <script src="/static/js/jquery-3.2.0.js"></script>
+    <script src="/static/js/jquery.noty.packaged.js"></script>
     <script src="/static/js/emitter.js"></script>
     <script src="/static/js/control_geoodle.js"></script>
     <script src="/static/js/control_geoodle_participants.js"></script>

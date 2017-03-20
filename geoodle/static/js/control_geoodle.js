@@ -18,13 +18,9 @@ const HELP_ICON = '/static/icons/ic_help_outline_black_24px.svg';
 
 const BUTTONS = [
     {
-        klass: 'add_point',
-        text: 'Add points',
+        klass: 'toggle_add_mode',
+        text: 'Toggle adding points/suggestions',
         icon: POINT_ICON
-    }, {
-        klass: 'add_suggestion',
-        text: 'Add suggestions',
-        icon: SUGGESTION_ICON
     }, {
         klass: 'remove_all_markers',
         text: 'Clear points & suggestions',
@@ -40,9 +36,15 @@ const BUTTONS = [
     }
 ];
 
-const MARKER_PATHS = {
-    point: POINT_PATH,
-    suggestion: SUGGESTION_PATH
+const MARKER_GRAPHICS = {
+    point: {
+        path: POINT_PATH,
+        icon: POINT_ICON
+    },
+    suggestion: {
+        path: SUGGESTION_PATH,
+        icon: SUGGESTION_ICON
+    }
 }
 
 
@@ -53,7 +55,7 @@ class GeoodleControl {
         this.participants = {};
         this.markers = [];
 
-        this.current_mode = undefined;
+        this.add_mode = 'point';
         this.selected_participant_id = null;
 
         this.init_controls(controlDiv);
@@ -61,7 +63,12 @@ class GeoodleControl {
         this.init_center_marker();
         this.init_map_listeners();
 
-        this.set_current_mode('points');
+        // Setup Noty defaults
+        $.noty.defaults.layout = 'bottomCenter';
+        $.noty.defaults.theme = 'relax';
+        $.noty.defaults.type = 'information';
+        $.noty.defaults.timeout = 5000;
+        $.noty.defaults.progressBar = true;
     }
 
     init_controls(controlDivElement) {
@@ -76,7 +83,7 @@ class GeoodleControl {
                     border-radius: 10px;
                     padding: 5px;
                 ">
-                    <div title="${button['text']}" style="
+                    <div class="control_icon" title="${button['text']}" style="
                             background: url(${button['icon']})
                                 no-repeat
                                 center;
@@ -105,8 +112,8 @@ class GeoodleControl {
             </div>`);
 
         this.controls = {
-            add_point: controlDiv.find('.add_point'),
-            add_suggestion: controlDiv.find('.add_suggestion'),
+            toggle_add_mode: controlDiv.find('.toggle_add_mode'),
+            toggle_add_mode_icon: controlDiv.find('.toggle_add_mode .control_icon'),
             remove_all_markers: controlDiv.find('.remove_all_markers'),
             move_to_center: controlDiv.find('.move_to_center'),
             show_hide_help: controlDiv.find('.show_hide_help')
@@ -116,12 +123,8 @@ class GeoodleControl {
     }
 
     init_control_listeners() {
-        this.controls.add_point.click(function() {
-            this.set_current_mode('points');
-        }.bind(this));
-
-        this.controls.add_suggestion.click(function() {
-            this.set_current_mode('suggestions');
+        this.controls.toggle_add_mode.click(function() {
+            this.toggle_add_mode();
         }.bind(this));
 
         this.controls.remove_all_markers.click(function() {
@@ -139,10 +142,15 @@ class GeoodleControl {
         }.bind(this));
     }
 
-    set_current_mode(current_mode) {
-        this.current_mode = current_mode;
-        this.controls.add_point.css('background-color', current_mode == 'points' ? 'darkgrey' : 'lightgrey');
-        this.controls.add_suggestion.css('background-color', current_mode == 'suggestions' ? 'darkgrey' : 'lightgrey');
+    toggle_add_mode() {
+        if (this.add_mode != 'point') {
+            this.add_mode = 'point';
+        } else {
+            this.add_mode = 'suggestion';
+        }
+
+        let BUTTON_ICON = MARKER_GRAPHICS[this.add_mode].icon;
+        this.controls.toggle_add_mode_icon.css('background-image', `url(${BUTTON_ICON})`);
     }
 
     init_center_marker() {
@@ -161,7 +169,7 @@ class GeoodleControl {
 
     init_map_listeners() {
         map.addListener('click', function(e) {
-            if (this.current_mode == 'points') {
+            if (this.add_mode == 'point') {
                 this.add_point(e.latLng);
                 this.update_center_marker();
             } else {
@@ -200,7 +208,7 @@ class GeoodleControl {
 
         let marker = new google.maps.Marker({
             icon: {
-                path: MARKER_PATHS[type],
+                path: MARKER_GRAPHICS[type].path,
                 fillColor: this.participants[owner].color,
                 fillOpacity: 1,
                 anchor: {x: 12, y: 12}
@@ -241,7 +249,7 @@ class GeoodleControl {
             marker_info => marker_info.marker == marker
         );
         if (marker_info.owner !== owner) {
-            alert('You cannot remove other participants markers!');
+            noty({text: 'You cannot remove other participants markers!'});
             return;
         }
 
@@ -365,9 +373,9 @@ class GeoodleControl {
     get_selected_participant() { 
         if (this.selected_participant_id === null) {
             if (Object.keys(this.participants).length === 0) {
-                alert('You need to add a participant');
+                noty({text: 'You need to add a participant'});
             } else {
-                alert('You need to select a participant');
+                noty({text: 'You need to select a participant'});
             }
             return;
         }

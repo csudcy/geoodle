@@ -19,28 +19,27 @@ Cool things which inspired me or I'm making use of in this project (in no partic
 * ~~MVP:~~
   * ~~A map~~
   * ~~Click to add points~~
+    * ~~Anywhere you would like to be near (home, work, stations you pass through etc.)~~
+    * ~~Suggestions of where to go~~
   * ~~Click points to remove them~~
   * ~~Shows the geographical midpoint~~
   * ~~Client-side only (state is in the URL)~~
+* Second Version
   * ~~Add participants~~
   * ~~Only remove icons of the currently active participant~~
-* Login (by name to start with, by social login later)
-  * Later: Set your mode of transport
-* Create a geopoll
-* Add various points to the map:
-  * ~~Anywhere you would like to be near (home, work, stations you pass through etc.)~~
-  * ~~Suggestions of where to go~~
-  * Add descriptions for points/suggestions
-  * Later: Search for places
-* ~~Geoodle will tell you the central point of all locations~~
-* You can add suggestions of where to go
-  * People can vote on which suggestions they like (or refuse to go to!)
-  * Later: Show approximate transport times/routes
-* Misc
-  * Make point/suggestion a single toggle button
-  * Add [Noty](http://ned.im/noty/) for notifications
+  * ~~Make point/suggestion a single toggle button~~
+  * ~~Add [Noty](http://ned.im/noty/) for notifications~~
   * Auto create participants & select a participant if necessary
+  * Add descriptions for points/suggestions
+  * People can vote on which suggestions they like (or refuse to go to!)
   * Better style for participant control
+* Serverside version
+  * Login (by name to start with, by social login later)
+  * Create a Geoodle
+  * Later: Set your mode of transport
+  * Later: Show approximate transport times/routes
+  * Later: Search for places
+* Misc
   * Make loading more robust
 
 
