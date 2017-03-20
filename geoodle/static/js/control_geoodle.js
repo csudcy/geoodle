@@ -249,7 +249,10 @@ class GeoodleControl {
             marker_info => marker_info.marker == marker
         );
         if (marker_info.owner !== owner) {
-            noty({text: 'You cannot remove other participants markers!'});
+            noty({
+                text: 'You cannot remove other participants markers!',
+                type: 'error'
+            });
             return;
         }
 
@@ -371,14 +374,18 @@ class GeoodleControl {
     }
 
     get_selected_participant() { 
-        if (this.selected_participant_id === null) {
-            if (Object.keys(this.participants).length === 0) {
-                noty({text: 'You need to add a participant'});
-            } else {
-                noty({text: 'You need to select a participant'});
-            }
-            return;
+        // If there are no participants, add one
+        if (Object.keys(this.participants).length === 0) {
+            this.add_participant(null, 'A participant', '#0000ff');
+            noty({text: 'I added a default participant'});
         }
+
+        // If there is no selected participant, select one
+        if (this.selected_participant_id === null) {
+            this.set_selected_participant(Object.keys(this.participants)[0]);
+            noty({text: 'I selected a participant'});
+        }
+
         return this.selected_participant_id;
     }
 
@@ -458,12 +465,6 @@ class GeoodleControl {
                 }
             )
         );
-
-        // Select the first participant
-        let participant_ids = Object.keys(this.participants);
-        if (participant_ids.length > 0) {
-            this.set_selected_participant(participant_ids[0]);
-        }
 
         this.update_center_marker();
         this.emit('update');

@@ -29,7 +29,7 @@ Cool things which inspired me or I'm making use of in this project (in no partic
   * ~~Only remove icons of the currently active participant~~
   * ~~Make point/suggestion a single toggle button~~
   * ~~Add [Noty](http://ned.im/noty/) for notifications~~
-  * Auto create participants & select a participant if necessary
+  * ~~Auto create participants & select a participant if necessary~~
   * Add descriptions for points/suggestions
   * People can vote on which suggestions they like (or refuse to go to!)
   * Better style for participant control
