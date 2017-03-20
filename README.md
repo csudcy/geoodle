@@ -34,10 +34,15 @@ Cool things which inspired me or I'm making use of in this project (in no partic
   * Later: Search for places
 * ~~Geoodle will tell you the central point of all locations~~
 * You can add suggestions of where to go
-  * Later: Show approximate transport times/routes
   * People can vote on which suggestions they like (or refuse to go to!)
-* Better style for participant control
-* Make loading more robust
+  * Later: Show approximate transport times/routes
+* Misc
+  * Make point/suggestion a single toggle button
+  * Add [Noty](http://ned.im/noty/) for notifications
+  * Auto create participants & select a participant if necessary
+  * Better style for participant control
+  * Make loading more robust
+
 
 Things which might come later:
 
