@@ -76,7 +76,7 @@ class GeoodleControl {
         this.init_button_listeners();
         this.init_participant_button_listeners();
         this.init_center_marker();
-        this.init_map_listeners();
+        this.init_map_listeners(map);
 
         // Setup Noty defaults
         $.noty.defaults.layout = 'bottomCenter';
@@ -249,7 +249,7 @@ class GeoodleControl {
         });
     }
 
-    init_map_listeners() {
+    init_map_listeners(map) {
         map.addListener('click', function(e) {
             if (this.add_mode == 'point') {
                 this.add_marker('point', e.latLng);
@@ -594,9 +594,14 @@ class GeoodleControl {
             })
         });
 
+        // Safari doesn't have object.values :(
+        let participants = Object.keys(this.participants).map(
+            key => this.participants[key]
+        );
+
         return {
             color: this.color,
-            participants: Object.values(this.participants),
+            participants: participants,
             markers: markers
         };
     }

@@ -1,9 +1,7 @@
-let map;
-
 let LONDON = {lat: 51.51, lng: -0.17};
 
 function initMap() {
-    map = new google.maps.Map(document.getElementById('map'), {
+    let map = new google.maps.Map(document.getElementById('map'), {
         zoom: 12,
         center: LONDON,
         mapTypeControl: false
