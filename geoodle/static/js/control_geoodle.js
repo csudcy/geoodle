@@ -1,4 +1,10 @@
 /*
+GeoodleControl
+
+Requires: jQuery, noty
+*/
+
+/*
 These icons are from the Material Design icon set. I have copied the SVG paths
 here as there doesn't seem to be any better way to do everything needed:
  * Be able to use them as map marker icons
@@ -49,6 +55,9 @@ const MARKER_GRAPHICS = {
 
 
 class GeoodleControl {
+    /**************************************\
+    *            INITIALISATION            *
+    \**************************************/
     constructor(controlDiv, map, center) {
         this.center = center;
         this.map = map;
@@ -142,17 +151,6 @@ class GeoodleControl {
         }.bind(this));
     }
 
-    toggle_add_mode() {
-        if (this.add_mode != 'point') {
-            this.add_mode = 'point';
-        } else {
-            this.add_mode = 'suggestion';
-        }
-
-        let BUTTON_ICON = MARKER_GRAPHICS[this.add_mode].icon;
-        this.controls.toggle_add_mode_icon.css('background-image', `url(${BUTTON_ICON})`);
-    }
-
     init_center_marker() {
         // Setup the center marker
         this.center_marker = new google.maps.Marker({
@@ -170,42 +168,36 @@ class GeoodleControl {
     init_map_listeners() {
         map.addListener('click', function(e) {
             if (this.add_mode == 'point') {
-                this.add_point(e.latLng);
+                this.add_marker('point', e.latLng);
                 this.update_center_marker();
             } else {
-                this.add_suggestion(e.latLng);
+                this.add_marker('suggestion', e.latLng);
             }
             this.emit('update');
         }.bind(this));
     }
 
-    update_marker_colors() {
-        // Update all the markers
-        this.markers.forEach(function(marker_info) {
-            let marker = marker_info.marker;
-            marker.setIcon({
-                path: marker.icon.path,
-                fillColor: this.participants[marker_info.owner].color,
-                fillOpacity: marker.icon.fillOpacity,
-                anchor: marker.icon.anchor
-            });
-        }.bind(this));
+    /**************************************\
+    *           MARKER MANAGEMENT          *
+    \**************************************/
+
+    toggle_add_mode() {
+        if (this.add_mode != 'point') {
+            this.add_mode = 'point';
+        } else {
+            this.add_mode = 'suggestion';
+        }
+
+        let BUTTON_ICON = MARKER_GRAPHICS[this.add_mode].icon;
+        this.controls.toggle_add_mode_icon.css('background-image', `url(${BUTTON_ICON})`);
     }
 
-    add_point(latLng) {
-        this._add_marker('point', null, '', latLng);
-    }
-
-    add_suggestion(latLng) {
-        this._add_marker('suggestion', null, '', latLng);
+    add_marker(type, latLng) {
+        let owner = this.get_selected_participant();
+        this._add_marker(type, owner, '', latLng);
     }
 
     _add_marker(type, owner, label, latLng) {
-        if (owner === null) {
-            owner = this.get_selected_participant();
-            if (owner === undefined) return;
-        }
-
         let marker = new google.maps.Marker({
             icon: {
                 path: MARKER_GRAPHICS[type].path,
@@ -279,6 +271,23 @@ class GeoodleControl {
         );
     }
 
+    update_marker_colors() {
+        // Update all the markers
+        this.markers.forEach(function(marker_info) {
+            let marker = marker_info.marker;
+            marker.setIcon({
+                path: marker.icon.path,
+                fillColor: this.participants[marker_info.owner].color,
+                fillOpacity: marker.icon.fillOpacity,
+                anchor: marker.icon.anchor
+            });
+        }.bind(this));
+    }
+
+    /**************************************\
+    *             CENTER MARKER            *
+    \**************************************/
+
     update_center_marker() {
         let lat = 0,
             lng = 0,
@@ -307,6 +316,10 @@ class GeoodleControl {
     move_to_center() {
         this.map.panTo(this.center_marker.getPosition());
     }
+
+    /**************************************\
+    *             PARTICIPANTS             *
+    \**************************************/
 
     add_participant(id, name, color) {
         if (id === null) {
@@ -397,6 +410,10 @@ class GeoodleControl {
         this.emit('update');
     }
 
+    /**************************************\
+    *            SERIALISATION             *
+    \**************************************/
+
     serialise() {
         /*
         {
@@ -467,6 +484,7 @@ class GeoodleControl {
         );
 
         this.update_center_marker();
+        this.move_to_center();
         this.emit('update');
     }
 }

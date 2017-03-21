@@ -30,15 +30,18 @@ Cool things which inspired me or I'm making use of in this project (in no partic
   * ~~Make point/suggestion a single toggle button~~
   * ~~Add [Noty](http://ned.im/noty/) for notifications~~
   * ~~Auto create participants & select a participant if necessary~~
+  * Better style for participant control
+  * Don't allow moving other peoples markers
   * Add descriptions for points/suggestions
   * People can vote on which suggestions they like (or refuse to go to!)
-  * Better style for participant control
+* Third Version:
+  * Set your mode of transport
+  * Show approximate transport times/routes
+  * Search for places
 * Serverside version
   * Login (by name to start with, by social login later)
   * Create a Geoodle
-  * Later: Set your mode of transport
-  * Later: Show approximate transport times/routes
-  * Later: Search for places
+  * Make everything work!
 * Misc
   * Make loading more robust
 
