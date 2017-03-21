@@ -21,9 +21,14 @@ const SUGGESTION_ICON = '/static/icons/ic_star_black_24px.svg';
 const CLEAR_ICON = '/static/icons/ic_clear_black_24px.svg';
 const CENTER_ICON = '/static/icons/ic_location_searching_black_24px.svg';
 const HELP_ICON = '/static/icons/ic_help_outline_black_24px.svg';
+const PARTICIPANT_ICON = '/static/icons/ic_person_black_24px.svg';
 
 const BUTTONS = [
     {
+        klass: 'toggle_participant',
+        text: 'Manage participants',
+        icon: PARTICIPANT_ICON
+    }, {
         klass: 'toggle_add_mode',
         text: 'Toggle adding points/suggestions',
         icon: POINT_ICON
@@ -59,16 +64,17 @@ class GeoodleControl {
     *            INITIALISATION            *
     \**************************************/
     constructor(controlDiv, map, center) {
-        this.center = center;
         this.map = map;
+        this.center = center;
+
         this.participants = {};
         this.markers = [];
-
         this.add_mode = 'point';
         this.selected_participant_id = null;
 
         this.init_controls(controlDiv);
-        this.init_control_listeners();
+        this.init_button_listeners();
+        this.init_participant_button_listeners();
         this.init_center_marker();
         this.init_map_listeners();
 
@@ -91,6 +97,7 @@ class GeoodleControl {
                     border: 2px solid rgb(255, 255, 255);
                     border-radius: 10px;
                     padding: 5px;
+                    cursor: pointer;
                 ">
                     <div class="control_icon" title="${button['text']}" style="
                             background: url(${button['icon']})
@@ -114,24 +121,67 @@ class GeoodleControl {
                     border: 2px solid rgb(255, 255, 255);
                     border-radius: 3px;
                     box-shadow: rgba(0, 0, 0, 0.298039) 0px 2px 6px;
-                    cursor: pointer;
                     text-align: center;
                 ">
-                ${BUTTON_HTML}
+                <span
+                    class="button_container"
+                    style="
+                        float: left;
+                    ">
+                    ${BUTTON_HTML}
+                </span>
+                <span
+                    class="participant_container"
+                    style="
+                        float: left;
+                        text-align: center;
+                        display: none;
+                    ">
+                    Participants:
+                    <div class="participant_list">
+                    </div>
+                    <button
+                        class="add_participant">
+                        Add Participant
+                    </button>
+                    <br/>
+                    <button
+                        class="remove_all_participants">
+                        Clear Participants
+                    </button>
+                </span>
+                <div
+                    style="
+                        clear: both;
+                    ">
+                </div>
             </div>`);
 
         this.controls = {
+            // Main buttons
+            toggle_participant: controlDiv.find('.toggle_participant'),
             toggle_add_mode: controlDiv.find('.toggle_add_mode'),
-            toggle_add_mode_icon: controlDiv.find('.toggle_add_mode .control_icon'),
             remove_all_markers: controlDiv.find('.remove_all_markers'),
             move_to_center: controlDiv.find('.move_to_center'),
-            show_hide_help: controlDiv.find('.show_hide_help')
-        }
+            show_hide_help: controlDiv.find('.show_hide_help'),
 
-        this.control_labels = controlDiv.find('.control_label');
+            // Participant buttons
+            participant_list: controlDiv.find('.participant_list'),
+            add_participant: controlDiv.find('.add_participant'),
+            remove_all_participants: controlDiv.find('.remove_all_participants'),
+
+            // Other
+            toggle_add_mode_icon: controlDiv.find('.toggle_add_mode .control_icon'),
+            participant_container: controlDiv.find('.participant_container'),
+            control_labels: controlDiv.find('.control_label')
+        }
     }
 
-    init_control_listeners() {
+    init_button_listeners() {
+        this.controls.toggle_participant.click(function() {
+            this.controls.participant_container.toggle();
+        }.bind(this));
+
         this.controls.toggle_add_mode.click(function() {
             this.toggle_add_mode();
         }.bind(this));
@@ -147,8 +197,42 @@ class GeoodleControl {
         }.bind(this));
 
         this.controls.show_hide_help.click(function() {
-            this.control_labels.toggle();
+            this.controls.control_labels.toggle();
         }.bind(this));
+    }
+
+    init_participant_button_listeners() {
+        this.controls.add_participant.click(function() {
+            this.add_participant(null, 'A participant', '#ff0000');
+        }.bind(this));
+
+        this.controls.participant_list.on('change', '[name="selected_participant"]', function(e) {
+            let target = $(e.target);
+            let id = target.parent().attr('participant_id');
+            this.set_selected_participant(id);
+        }.bind(this))
+
+        this.controls.participant_list.on('change', '.participant_color', function(e) {
+            let target = $(e.target);
+            let id = target.parent().attr('participant_id');
+            this.update_participant(id, 'color', target.val());
+        }.bind(this))
+
+        this.controls.participant_list.on('change', '.participant_name', function(e) {
+            let target = $(e.target);
+            let id = target.parent().attr('participant_id');
+            this.update_participant(id, 'name', target.val());
+        }.bind(this))
+
+        this.controls.participant_list.on('click', '.remove_participant', function(e) {
+            let target = $(e.target);
+            let id = target.parent().attr('participant_id');
+            this.remove_participant(id);
+        }.bind(this))
+
+        this.controls.remove_all_participants.click(function(e) {
+            this.remove_all_participants();
+        }.bind(this))
     }
 
     init_center_marker() {
@@ -321,6 +405,38 @@ class GeoodleControl {
     *             PARTICIPANTS             *
     \**************************************/
 
+    _get_participant_html(id, name, color) {
+        return `
+            <div
+                participant_id="${id}">
+                <input
+                    type="radio"
+                    name="selected_participant">
+                <input
+                    class="participant_color"
+                    title="Set participant colour"
+                    type="color"
+                    value="${color}"
+                    style="
+                        border: none;
+                        border-radius: 5px;
+                        width: 20px;
+                    "/>
+                <input
+                    class="participant_name"
+                    title="Enter participants name"
+                    type="text"
+                    value="${name}"
+                    style="
+                        width: 65px;
+                    "/>
+                <button
+                    class="remove_participant">
+                    X
+                </button>
+            </div>`;
+    }
+
     add_participant(id, name, color) {
         if (id === null) {
             // Find an id for this participant
@@ -337,6 +453,15 @@ class GeoodleControl {
             color: color
         };
 
+        // Update UI
+        this.controls.participant_list.append(
+            this._get_participant_html(
+                id,
+                name,
+                color
+            )
+        );
+
         // Let listeners know what's going on
         this.emit('add_participant', this.participants[id]);
         this.emit('update');
@@ -346,8 +471,12 @@ class GeoodleControl {
         // Update the participant
         this.participants[id][attr] = value;
 
-        // Update marker colours
+        // Update UI
         this.update_marker_colors();
+        this.update_selected_participant_color();
+        let participant_element = this.controls.participant_list.find(`[participant_id=${id}]`);
+        participant_element.find('.participant_color').val(this.participants[id].color);
+        participant_element.find('.participant_name').val(this.participants[id].name);
 
         // Let listeners know what's going on
         this.emit('update_participant', this.participants[id]);
@@ -364,13 +493,15 @@ class GeoodleControl {
         ).forEach(
             marker_info => this._remove_marker(marker_info.marker)
         );
+        this.update_center_marker();
 
         // Unset selected participant if necessary
         if (this.selected_participant_id === id) {
             this.set_selected_participant(null);
         }
 
-        this.update_center_marker();
+        // Update UI
+        this.controls.participant_list.find(`[participant_id=${id}]`).remove();
 
         // Let listeners know what's going on
         this.emit('remove_participant', id);
@@ -381,15 +512,28 @@ class GeoodleControl {
         // Set selected participant
         this.selected_participant_id = id;
 
+        // Update UI
+        let selected_participant_element = this.controls.participant_list.find(`[participant_id=${id}] input[type="radio"]`);
+        selected_participant_element.prop('checked', true);
+        this.update_selected_participant_color();
+
         // Let listeners know what's going on
         this.emit('set_selected_participant', id);
         this.emit('update');
     }
 
+    update_selected_participant_color() {
+        let color = 'lightgrey';
+        if (this.selected_participant_id !== null) {
+            color = this.participants[this.selected_participant_id].color;
+        }
+        this.controls.toggle_participant.css('background-color', color);
+    }
+
     get_selected_participant() { 
         // If there are no participants, add one
         if (Object.keys(this.participants).length === 0) {
-            this.add_participant(null, 'A participant', '#0000ff');
+            this.add_participant(null, 'A participant', '#00ffff');
             noty({text: 'I added a default participant'});
         }
 

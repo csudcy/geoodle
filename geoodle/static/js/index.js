@@ -5,7 +5,8 @@ let LONDON = {lat: 51.51, lng: -0.17};
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
         zoom: 12,
-        center: LONDON
+        center: LONDON,
+        mapTypeControl: false
     });
 
     // Create the GeoodleControl
@@ -13,15 +14,6 @@ function initMap() {
     let geoodleControl = new GeoodleControl(geoodleControlDiv, map, LONDON);
     geoodleControlDiv.index = 1;
     map.controls[google.maps.ControlPosition.LEFT_CENTER].push(geoodleControlDiv);
-
-    // Create the GeoodleParticipantControl
-    let geoodleParticipantControlDiv = document.createElement('div');
-    let geoodleParticipantControl = new GeoodleParticipantControl(
-        geoodleParticipantControlDiv,
-        geoodleControl
-    );
-    geoodleParticipantControlDiv.index = 1;
-    map.controls[google.maps.ControlPosition.TOP_CENTER].push(geoodleParticipantControlDiv);
 
     // Whenever there is an update on the map, update the URL hash
     geoodleControl.on('update', function() {
