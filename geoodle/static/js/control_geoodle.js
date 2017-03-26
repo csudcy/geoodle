@@ -11,52 +11,46 @@ here as there doesn't seem to be any better way to do everything needed:
  * Be able to set their fill color
  * Be able to use them in the controls
 */
-const POINT_PATH = 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z';
-const SUGGESTION_PATH = 'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z';
-const CLEAR_PATH = 'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z';
-const CENTER_PATH = 'M20.94 11c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z';
+const SVG_PATHS = {
+    center: 'M20.94 11c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z',
+    clear: 'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z',
+    point: 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
+    suggestion: 'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z'
+}
 
-const POINT_ICON = '/static/icons/ic_home_black_24px.svg';
-const SUGGESTION_ICON = '/static/icons/ic_star_black_24px.svg';
-const CLEAR_ICON = '/static/icons/ic_clear_black_24px.svg';
-const CENTER_ICON = '/static/icons/ic_location_searching_black_24px.svg';
-const HELP_ICON = '/static/icons/ic_help_outline_black_24px.svg';
-const PARTICIPANT_ICON = '/static/icons/ic_person_black_24px.svg';
+const ICON_URLS = {
+    center: '/static/icons/ic_location_searching_black_24px.svg',
+    clear: '/static/icons/ic_clear_black_24px.svg',
+    delete: '/static/icons/ic_delete_black_24px',
+    help: '/static/icons/ic_help_outline_black_24px.svg',
+    participant: '/static/icons/ic_person_black_24px.svg',
+    point: '/static/icons/ic_home_black_24px.svg',
+    suggestion: '/static/icons/ic_star_black_24px.svg'
+}
 
 const BUTTONS = [
     {
         klass: 'toggle_participant',
         text: 'Manage participants',
-        icon: PARTICIPANT_ICON
+        icon: ICON_URLS.participant,
     }, {
         klass: 'toggle_add_mode',
         text: 'Toggle adding points/suggestions',
-        icon: POINT_ICON
+        icon: ICON_URLS.point,
     }, {
         klass: 'remove_all_markers',
         text: 'Clear points & suggestions',
-        icon: CLEAR_ICON
+        icon: ICON_URLS.clear,
     }, {
         klass: 'move_to_center',
         text: 'Move to current center',
-        icon: CENTER_ICON
+        icon: ICON_URLS.center,
     }, {
         klass: 'show_hide_help',
         text: 'Show/hide help',
-        icon: HELP_ICON
+        icon: ICON_URLS.help,
     }
 ];
-
-const MARKER_GRAPHICS = {
-    point: {
-        path: POINT_PATH,
-        icon: POINT_ICON
-    },
-    suggestion: {
-        path: SUGGESTION_PATH,
-        icon: SUGGESTION_ICON
-    }
-}
 
 
 class GeoodleControl {
@@ -244,7 +238,7 @@ class GeoodleControl {
         // Setup the center marker
         this.center_marker = new google.maps.Marker({
             icon: {
-                path: CENTER_PATH,
+                path: SVG_PATHS.center,
                 fillColor: 'white',
                 fillOpacity: 1,
                 anchor: {x: 12, y: 12}
@@ -277,8 +271,10 @@ class GeoodleControl {
             this.add_mode = 'suggestion';
         }
 
-        let BUTTON_ICON = MARKER_GRAPHICS[this.add_mode].icon;
-        this.controls.toggle_add_mode_icon.css('background-image', `url(${BUTTON_ICON})`);
+        this.controls.toggle_add_mode_icon.css(
+            'background-image',
+            `url(${ICON_URLS[this.add_mode]})`
+        );
     }
 
     add_marker(type, latLng) {
@@ -290,7 +286,7 @@ class GeoodleControl {
     _add_marker(type, owner, label, latLng) {
         let marker = new google.maps.Marker({
             icon: {
-                path: MARKER_GRAPHICS[type].path,
+                path: SVG_PATHS[type],
                 fillColor: this.participants[owner].color,
                 fillOpacity: 1,
                 anchor: {x: 12, y: 12}
@@ -323,7 +319,7 @@ class GeoodleControl {
                             style="
                                 display: inline-block;
                                 background:
-                                    url(${MARKER_GRAPHICS[marker_info.type].icon})
+                                    url(${ICON_URLS[marker_info.type]})
                                     no-repeat
                                     center;
                                 background-color: ${this.participants[marker_info.owner].color};
