@@ -84,6 +84,11 @@ class GeoodleControl {
         $.noty.defaults.type = 'information';
         $.noty.defaults.timeout = 5000;
         $.noty.defaults.progressBar = true;
+
+        // Create an infoWindow
+        this.infowindow = new google.maps.InfoWindow({
+          content: '-'
+        });
     }
 
     init_controls(controlDivElement) {
@@ -281,6 +286,7 @@ class GeoodleControl {
         this._add_marker(type, owner, '', latLng);
     }
 
+
     _add_marker(type, owner, label, latLng) {
         let marker = new google.maps.Marker({
             icon: {
@@ -294,11 +300,64 @@ class GeoodleControl {
             draggable: true
         });
 
+        let marker_info = {
+            type: type,
+            owner: owner,
+            label: label,
+            marker: marker
+        };
+        this.markers.push(marker_info);
+
+
+
+
+
+
+
         marker.addListener('click', function() {
-            this.remove_marker(marker);
-            // Not strictly necessary for suggestions...
-            this.update_center_marker();
-            this.emit('update');
+            let contentString = `
+                <div class="info_popup">
+                    <span class="owner_container">
+                        <span
+                            class="icon"
+                            style="
+                                display: inline-block;
+                                background:
+                                    url(${MARKER_GRAPHICS[marker_info.type].icon})
+                                    no-repeat
+                                    center;
+                                background-color: ${this.participants[marker_info.owner].color};
+                                width: 24px;
+                                height: 24px;
+                                border-radius: 5px;
+                            ">
+                        </span>
+                        <span class="name">
+                            ${this.participants[marker_info.owner].name}
+                        </span>
+                    </span>
+                    <span class="description_container">
+                        <input
+                            type="textbox"
+                            class="description"
+                            placeholder="description"/>
+                    </span>
+                    <span class="delete_container">
+                        <button
+                            class="delete_marker">
+                            X
+                        </button>
+                    </span>
+                </div>
+            `;
+
+            this.infowindow.setContent(contentString);
+            this.infowindow.open(this.map, marker);
+
+            // this.remove_marker(marker);
+            // // Not strictly necessary for suggestions...
+            // this.update_center_marker();
+            // this.emit('update');
         }.bind(this));
         // Not strictly necessary for suggestions...
         marker.addListener('drag', function() {
@@ -307,13 +366,6 @@ class GeoodleControl {
         marker.addListener('dragend', function() {
             this.emit('update');
         }.bind(this));
-
-        this.markers.push({
-            type: type,
-            owner: owner,
-            label: label,
-            marker: marker
-        });
     }
 
     remove_marker(marker) {
@@ -425,6 +477,7 @@ class GeoodleControl {
                 <input
                     class="participant_name"
                     title="Enter participants name"
+                    placeholder="Participant name"
                     type="text"
                     value="${name}"
                     style="
@@ -516,6 +569,15 @@ class GeoodleControl {
         let selected_participant_element = this.controls.participant_list.find(`[participant_id=${id}] input[type="radio"]`);
         selected_participant_element.prop('checked', true);
         this.update_selected_participant_color();
+
+        // Update which markers can be edited
+        // TODO: Don't show hand icon over undraggable markers
+        // TODO: Don't add a marker at the end of a failed drag
+        // this.markers.forEach(function(marker_info) {
+        //     marker_info.marker.setDraggable(
+        //         marker_info.owner == this.selected_participant_id
+        //     );
+        // }.bind(this));
 
         // Let listeners know what's going on
         this.emit('set_selected_participant', id);
