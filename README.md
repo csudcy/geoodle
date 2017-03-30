@@ -31,8 +31,8 @@ Cool things which inspired me or I'm making use of in this project (in no partic
   * ~~Add [Noty](http://ned.im/noty/) for notifications~~
   * ~~Auto create participants & select a participant if necessary~~
   * ~~Better style for participant control~~
+  * ~~Add descriptions for points/suggestions~~
   * Don't allow moving other peoples markers
-  * Add descriptions for points/suggestions
   * People can vote on which suggestions they like (or refuse to go to!)
 * Third Version:
   * Set your mode of transport
