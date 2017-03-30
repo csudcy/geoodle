@@ -32,6 +32,10 @@ Cool things which inspired me or I'm making use of in this project (in no partic
   * ~~Auto create participants & select a participant if necessary~~
   * ~~Better style for participant control~~
   * ~~Add descriptions for points/suggestions~~
+  * Show description on map (toggleable?)
+  * Give random descriptions to markers
+  * On infowindow open, focus on the description & select all
+  * On map click, if the info window is open, close it
   * Don't allow moving other peoples markers
   * People can vote on which suggestions they like (or refuse to go to!)
 * Third Version:
