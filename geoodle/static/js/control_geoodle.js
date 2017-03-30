@@ -13,8 +13,6 @@ here as there doesn't seem to be any better way to do everything needed:
 */
 const SVG_PATHS = {
     center: 'M20.94 11c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z',
-    // clear: 'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z',
-    // delete: 'M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z',
     point: 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
     suggestion: 'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z'
 }
@@ -276,6 +274,7 @@ class GeoodleControl {
                                 width: 24px;
                                 height: 24px;
                                 border-radius: 5px;
+                                cursor: pointer;
                             ">
                         </span>
                         <span
@@ -340,14 +339,34 @@ class GeoodleControl {
 
     init_infowindow_listeners() {
         this.infowindow_controls.delete_marker.click(function() {
+            // Remove the marker
             this.remove_marker(this.infowindow_marker_info);
-            // Not strictly necessary for suggestions...
+
+            // Update everything else
+            this.update_center_marker();
+            this.emit('update');
+        }.bind(this));
+
+        this.infowindow_controls.icon.click(function() {
+            // Flip the marker type
+            if (this.infowindow_marker_info.type != 'point') {
+                this.infowindow_marker_info.type = 'point';
+            } else {
+                this.infowindow_marker_info.type = 'suggestion';
+            }
+
+            // Update everything else
+            this.update_markers();
+            this.update_info_window();
             this.update_center_marker();
             this.emit('update');
         }.bind(this));
 
         this.infowindow_controls.description.on('change', function() {
+            // Save the new description
             this.infowindow_marker_info.label = this.infowindow_controls.description.val();
+
+            // Update everything else
             this.emit('update');
         }.bind(this));
     }
@@ -407,6 +426,64 @@ class GeoodleControl {
         }.bind(this));
     }
 
+    remove_marker(marker_info) {
+        // // Check this marker can be removed
+        // let owner = this.get_selected_participant();
+        // if (owner === undefined) return;
+
+        // if (marker_info.owner !== owner) {
+        //     noty({
+        //         text: 'You cannot remove other participants markers!',
+        //         type: 'error'
+        //     });
+        //     return;
+        // }
+
+        this._remove_marker(marker_info);
+    }
+
+    _remove_marker(marker_info) {
+        // If the info window belongs to this marker, close it
+        if (marker_info == this.infowindow_marker_info) {
+            this.close_info_window();
+        }
+
+        // Remove the given marker
+        marker_info.marker.setMap(null);
+
+        this.markers = this.markers.filter(
+            check_marker_info => check_marker_info !== marker_info
+        );
+    }
+
+    remove_all_markers() {
+        let owner = this.get_selected_participant();
+        if (owner === undefined) return;
+
+        this.markers.filter(
+            marker_info => marker_info.owner == owner
+        ).forEach(
+            marker_info => this._remove_marker(marker_info)
+        );
+    }
+
+    update_markers() {
+        // Update all the markers
+        this.markers.forEach(function(marker_info) {
+            let marker = marker_info.marker;
+            marker.setIcon({
+                path: SVG_PATHS[marker_info.type],
+                fillColor: this.participants[marker_info.owner].color,
+                fillOpacity: marker.icon.fillOpacity,
+                anchor: marker.icon.anchor
+            });
+        }.bind(this));
+    }
+
+    /**************************************\
+    *              INFO WINDOW             *
+    \**************************************/
+
     show_info_window(marker_info) {
         if (this.infowindow_marker_info == marker_info) {
             // This is already the open window; close it
@@ -449,60 +526,6 @@ class GeoodleControl {
     close_info_window() {
         this.infowindow_marker_info = null;
         this.infowindow.close();
-    }
-
-    remove_marker(marker_info) {
-        // // Check this marker can be removed
-        // let owner = this.get_selected_participant();
-        // if (owner === undefined) return;
-
-        // if (marker_info.owner !== owner) {
-        //     noty({
-        //         text: 'You cannot remove other participants markers!',
-        //         type: 'error'
-        //     });
-        //     return;
-        // }
-
-        this._remove_marker(marker_info);
-    }
-
-    _remove_marker(marker_info) {
-        // If the info window belongs to this marker, close it
-        if (marker_info == this.infowindow_marker_info) {
-            this.close_info_window();
-        }
-
-        // Remove the given marker
-        marker_info.marker.setMap(null);
-
-        this.markers = this.markers.filter(
-            check_marker_info => check_marker_info !== marker_info
-        );
-    }
-
-    remove_all_markers() {
-        let owner = this.get_selected_participant();
-        if (owner === undefined) return;
-
-        this.markers.filter(
-            marker_info => marker_info.owner == owner
-        ).forEach(
-            marker_info => this._remove_marker(marker_info)
-        );
-    }
-
-    update_marker_colors() {
-        // Update all the markers
-        this.markers.forEach(function(marker_info) {
-            let marker = marker_info.marker;
-            marker.setIcon({
-                path: marker.icon.path,
-                fillColor: this.participants[marker_info.owner].color,
-                fillOpacity: marker.icon.fillOpacity,
-                anchor: marker.icon.anchor
-            });
-        }.bind(this));
     }
 
     /**************************************\
@@ -610,7 +633,7 @@ class GeoodleControl {
         this.participants[id][attr] = value;
 
         // Update UI
-        this.update_marker_colors();
+        this.update_markers();
         this.update_selected_participant_color();
         this.update_info_window(id);
         this.update_info
