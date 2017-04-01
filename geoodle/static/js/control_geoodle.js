@@ -556,6 +556,9 @@ class GeoodleControl {
         this.hide_hoverwindow();
         this.update_infowindow();
         this.infowindow.open(this.map, marker_info.marker);
+
+        this.infowindow_controls.description_input.focus();
+        this.infowindow_controls.description_input.select();
     }
 
     update_infowindow(updated_participant_id) {
