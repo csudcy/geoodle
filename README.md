@@ -34,7 +34,7 @@ Cool things which inspired me or I'm making use of in this project (in no partic
   * ~~Add descriptions for points/suggestions~~
   * ~~On map click, if the info window is open, close it~~
   * ~~Give random names/colours/labels~~
-  * Show description on map (toggleable?)
+  * ~~Show description on hover~~
   * On infowindow open, focus on the description & select all
   * Set your mode of transport
   * Show approximate transport times/routes

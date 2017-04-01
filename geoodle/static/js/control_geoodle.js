@@ -74,6 +74,7 @@ class GeoodleControl {
         this.init_noty();
         this.init_infowindow();
         this.init_infowindow_listeners();
+        this.init_hoverwindow();
     }
 
     init_controls(controlDivElement) {
@@ -242,7 +243,7 @@ class GeoodleControl {
     init_map_listeners(map) {
         map.addListener('click', function(e) {
             if (this.infowindow_marker_info !== null) {
-                return this.close_info_window();
+                return this.hide_infowindow();
             }
             if (this.add_mode == 'point') {
                 this.add_marker('point', e.latLng);
@@ -328,14 +329,14 @@ class GeoodleControl {
             content: infowindow_div[0]
         });
         google.maps.event.addListener(this.infowindow, 'closeclick', function() {
-            this.close_info_window();
+            this.hide_infowindow();
         }.bind(this));
 
         // Find the controls
         this.infowindow_controls = {
             icon: infowindow_div.find('.owner_container .icon'),
             name: infowindow_div.find('.owner_container .name'),
-            description: infowindow_div.find('.description_container .description'),
+            description_input: infowindow_div.find('.description_container .description'),
             delete_marker: infowindow_div.find('.delete_marker'),
         };
     }
@@ -360,18 +361,67 @@ class GeoodleControl {
 
             // Update everything else
             this.update_markers();
-            this.update_info_window();
+            this.update_infowindow();
             this.update_center_marker();
             this.emit('update');
         }.bind(this));
 
-        this.infowindow_controls.description.on('change', function() {
+        this.infowindow_controls.description_input.on('change', function() {
             // Save the new description
-            this.infowindow_marker_info.label = this.infowindow_controls.description.val();
+            this.infowindow_marker_info.label = this.infowindow_controls.description_input.val();
 
             // Update everything else
             this.emit('update');
         }.bind(this));
+    }
+
+    init_hoverwindow() {
+        let html = `
+            <div class="info_popup">
+                <div class="top_row">
+                    <span class="owner_container">
+                        <span
+                            class="icon"
+                            style="
+                                display: inline-block;
+                                // background: SET LATER;
+                                // background-color: SET LATER;
+                                width: 24px;
+                                height: 24px;
+                                border-radius: 5px;
+                                cursor: pointer;
+                            ">
+                        </span>
+                        <span
+                            class="name"
+                            style="
+                                font-weight: bold;
+                                padding: 5px;
+                                vertical-align: super;
+                            ">
+                            SET LATER
+                        </span>
+                    </span>
+                </div>
+                <span class="description">
+                </span>
+            </div>
+        `;
+
+        let hoverwindow_div = $(document.createElement('div'));
+        hoverwindow_div.html(html);
+
+        // Create an hoverwindow
+        this.hoverwindow = new google.maps.InfoWindow({
+            content: hoverwindow_div[0]
+        });
+
+        // Find the controls
+        this.hoverwindow_controls = {
+            icon: hoverwindow_div.find('.owner_container .icon'),
+            name: hoverwindow_div.find('.owner_container .name'),
+            description: hoverwindow_div.find('.description'),
+        };
     }
 
     /**************************************\
@@ -418,7 +468,7 @@ class GeoodleControl {
         this.markers.push(marker_info);
 
         marker.addListener('click', function() {
-            this.show_info_window(marker_info);
+            this.show_infowindow(marker_info);
         }.bind(this));
         // Not strictly necessary for suggestions...
         marker.addListener('drag', function() {
@@ -426,6 +476,13 @@ class GeoodleControl {
         }.bind(this));
         marker.addListener('dragend', function() {
             this.emit('update');
+        }.bind(this));
+
+        marker.addListener('mouseover', function() {
+            this.show_hoverwindow(marker_info);
+        }.bind(this));
+        marker.addListener('mouseout', function() {
+            this.hide_hoverwindow();
         }.bind(this));
     }
 
@@ -448,7 +505,7 @@ class GeoodleControl {
     _remove_marker(marker_info) {
         // If the info window belongs to this marker, close it
         if (marker_info == this.infowindow_marker_info) {
-            this.close_info_window();
+            this.hide_infowindow();
         }
 
         // Remove the given marker
@@ -487,48 +544,75 @@ class GeoodleControl {
     *              INFO WINDOW             *
     \**************************************/
 
-    show_info_window(marker_info) {
+    show_infowindow(marker_info) {
         if (this.infowindow_marker_info == marker_info) {
             // This is already the open window; close it
-            this.close_info_window();
+            this.hide_infowindow();
             return;
         }
 
         this.infowindow_marker_info = marker_info;
 
-        this.update_info_window();
+        this.hide_hoverwindow();
+        this.update_infowindow();
         this.infowindow.open(this.map, marker_info.marker);
     }
 
-    update_info_window(updated_participant_id) {
-        let marker_info = this.infowindow_marker_info;
-
+    update_infowindow(updated_participant_id) {
         // updated_participant_id (optional): The participant that is being updated
-        if (updated_participant_id && updated_participant_id !== marker_info.owner) {
+        if (updated_participant_id && updated_participant_id !== this.infowindow_marker_info.owner) {
             // There is a specific participant being udpate and it is not the
             // one the info window is for
             return;
         }
 
-        this.infowindow_controls.icon.css(
+        this._update_window_info(this.infowindow_marker_info, this.infowindow_controls);
+    }
+
+    hide_infowindow() {
+        this.infowindow_marker_info = null;
+        this.infowindow.close();
+    }
+
+    _update_window_info(marker_info, controls) {
+        controls.icon.css(
             'background',
             `url(${ICON_URLS[marker_info.type]}) no-repeat center`
         );
-        this.infowindow_controls.icon.css(
+        controls.icon.css(
             'background-color',
             this.participants[marker_info.owner].color
         );
-        this.infowindow_controls.name.text(
+        controls.name.text(
             this.participants[marker_info.owner].name
         );
-        this.infowindow_controls.description.val(
-            marker_info.label
-        );
+        if (controls.description_input) {
+            controls.description_input.val(
+                marker_info.label
+            );
+        } else {
+            controls.description.text(
+                marker_info.label
+            );
+        }
     }
 
-    close_info_window() {
-        this.infowindow_marker_info = null;
-        this.infowindow.close();
+    /**************************************\
+    *             HOVER WINDOW             *
+    \**************************************/
+
+    show_hoverwindow(marker_info) {
+        if (this.infowindow_marker_info == marker_info) {
+            // The infowindow is already open for this marker; don't do anything
+            return;
+        }
+
+        this._update_window_info(marker_info, this.hoverwindow_controls);
+        this.hoverwindow.open(this.map, marker_info.marker);
+    }
+
+    hide_hoverwindow() {
+        this.hoverwindow.close();
     }
 
     /**************************************\
@@ -644,7 +728,7 @@ class GeoodleControl {
         // Update UI
         this.update_markers();
         this.update_selected_participant_color();
-        this.update_info_window(id);
+        this.update_infowindow(id);
         this.update_info
         let participant_element = this.controls.participant_list.find(`[participant_id=${id}]`);
         participant_element.find('.participant_color').val(this.participants[id].color);
