@@ -32,20 +32,19 @@ Cool things which inspired me or I'm making use of in this project (in no partic
   * ~~Auto create participants & select a participant if necessary~~
   * ~~Better style for participant control~~
   * ~~Add descriptions for points/suggestions~~
+  * ~~On map click, if the info window is open, close it~~
+  * ~~Give random names/colours/labels~~
   * Show description on map (toggleable?)
-  * Give random descriptions to markers
   * On infowindow open, focus on the description & select all
-  * On map click, if the info window is open, close it
-  * Don't allow moving other peoples markers
-  * People can vote on which suggestions they like (or refuse to go to!)
-* Third Version:
   * Set your mode of transport
   * Show approximate transport times/routes
+  * People can vote on which suggestions they like (or refuse to go to!)
   * Search for places
 * Serverside version
   * Login (by name to start with, by social login later)
   * Create a Geoodle
   * Make everything work!
+  * Don't allow editing other peoples markers
 * Misc
   * Make loading more robust
 

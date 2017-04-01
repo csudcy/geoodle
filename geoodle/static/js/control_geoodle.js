@@ -193,7 +193,7 @@ class GeoodleControl {
 
     init_participant_button_listeners() {
         this.controls.add_participant.click(function() {
-            this.add_participant(null, 'A participant', '#ff0000');
+            this.add_participant(null, null, null);
         }.bind(this));
 
         this.controls.participant_list.on('change', '[name="selected_participant"]', function(e) {
@@ -241,6 +241,9 @@ class GeoodleControl {
 
     init_map_listeners(map) {
         map.addListener('click', function(e) {
+            if (this.infowindow_marker_info !== null) {
+                return this.close_info_window();
+            }
             if (this.add_mode == 'point') {
                 this.add_marker('point', e.latLng);
                 this.update_center_marker();
@@ -390,7 +393,7 @@ class GeoodleControl {
 
     add_marker(type, latLng) {
         let owner = this.get_selected_participant();
-        this._add_marker(type, owner, '', latLng);
+        this._add_marker(type, owner, chance.address(), latLng);
     }
 
     _add_marker(type, owner, label, latLng) {
@@ -606,6 +609,12 @@ class GeoodleControl {
                 id++;
             }
         }
+        if (name === null) {
+            name = chance.first();
+        }
+        if (color === null) {
+            color = chance.color({format:'hex'});
+        }
 
         // Add them to the list of participants
         this.participants[id] = {
@@ -705,7 +714,7 @@ class GeoodleControl {
     get_selected_participant() { 
         // If there are no participants, add one
         if (Object.keys(this.participants).length === 0) {
-            this.add_participant(null, 'A participant', '#00ffff');
+            this.add_participant(null, null, null);
             noty({text: 'I added a default participant'});
         }
 

@@ -21,6 +21,7 @@
     <script src="/static/js/jquery-3.2.0.js"></script>
     <script src="/static/js/jquery.noty.packaged.js"></script>
     <script src="/static/js/emitter.js"></script>
+    <script src="/static/js/chance.js"></script>
     <script src="/static/js/control_geoodle.js"></script>
     <script src="/static/js/control_login.js"></script>
     <script src="/static/js/index.js"></script>
