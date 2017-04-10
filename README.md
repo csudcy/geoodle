@@ -40,6 +40,8 @@ Cool things which inspired me or I'm making use of in this project (in no partic
   * Show approximate transport times/routes
   * People can vote on which suggestions they like (or refuse to go to!)
   * Search for places
+  * Confirm clearing of places/suggestions
+  * Move to localStorage
 * Serverside version
   * Login (by name to start with, by social login later)
   * Create a Geoodle

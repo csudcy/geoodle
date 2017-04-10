@@ -11,16 +11,23 @@ here as there doesn't seem to be any better way to do everything needed:
  * Be able to set their fill color
  * Be able to use them in the controls
 */
+// Map Markers have to use SVGs paths
 const SVG_PATHS = {
     center: 'M20.94 11c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z',
     point: 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
     suggestion: 'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z'
 }
 
+// Everything else uses icons
 const ICON_URLS = {
     center: '/static/icons/ic_location_searching_black_24px.svg',
     clear: '/static/icons/ic_clear_black_24px.svg',
     delete: '/static/icons/ic_delete_black_24px.svg',
+    directions: '/static/icons/ic_directions_black_24px.svg',
+    directions_bike: '/static/icons/ic_directions_bike_black_24px.svg',
+    directions_car: '/static/icons/ic_directions_car_black_24px.svg',
+    directions_transit: '/static/icons/ic_directions_transit_black_24px.svg',
+    directions_walk: '/static/icons/ic_directions_walk_black_24px.svg',
     help: '/static/icons/ic_help_outline_black_24px.svg',
     participant: '/static/icons/ic_person_black_24px.svg',
     point: '/static/icons/ic_home_black_24px.svg',
@@ -67,7 +74,7 @@ class GeoodleControl {
         this.infowindow_marker_info = null;
 
         this.init_controls(controlDiv);
-        this.init_button_listeners();
+        this.init_control_listeners();
         this.init_participant_button_listeners();
         this.init_center_marker();
         this.init_map_listeners(map);
@@ -77,33 +84,45 @@ class GeoodleControl {
         this.init_hoverwindow();
     }
 
+    _get_button_html(klass, text, icon) {
+        let ICON_WH = 24,
+            ICON_PADDING = 5;
+        return `
+            <button title="${text}" style="
+                    background: url(${icon})
+                        no-repeat;
+                    background-position-y: center;
+                    background-position-x: 5px;
+                    background-color: lightgrey;
+                    background-size: ${ICON_WH}px;
+                    padding-left: ${ICON_WH + ICON_PADDING}px;
+                    min-width: ${ICON_WH + 2 * ICON_PADDING}px;
+                    width: 100%;
+                    height: ${ICON_WH + 2 * ICON_PADDING}px;
+                    border: none;
+                    border-radius: ${ICON_PADDING}px;
+                    margin-bottom: 5px;
+                    display: block;
+                 "
+                class="${klass}">
+                <span class="control_label" style="display: none;">
+                    ${text}
+                </span>
+            </button>
+        `;
+    }
+
     init_controls(controlDivElement) {
         let controlDiv = $(controlDivElement);
 
         let BUTTON_HTML = '';
         BUTTONS.forEach(function(button) {
-            BUTTON_HTML += `
-                <div class="${button['klass']}" title="${button['text']}" style="
-                    background: lightgrey;
-                    border: 2px solid rgb(255, 255, 255);
-                    border-radius: 10px;
-                    padding: 5px;
-                    cursor: pointer;
-                ">
-                    <div class="control_icon" title="${button['text']}" style="
-                            background: url(${button['icon']})
-                                no-repeat
-                                center;
-                            min-width: 24px;
-                            height: 24px;
-                        ">
-                    </div>
-                    <div class="control_label" style="display: none;">
-                        ${button['text']}
-                    </div>
-                </div>
-                `;
-        });
+            BUTTON_HTML += this._get_button_html(
+                button.klass,
+                button.text,
+                button.icon
+            );
+        }.bind(this));
         controlDiv.html(`
             <div
                 class="container"
@@ -118,6 +137,7 @@ class GeoodleControl {
                     class="button_container"
                     style="
                         float: left;
+                        margin-bottom: -5px;
                     ">
                     ${BUTTON_HTML}
                 </span>
@@ -162,13 +182,13 @@ class GeoodleControl {
             remove_all_participants: controlDiv.find('.remove_all_participants'),
 
             // Other
-            toggle_add_mode_icon: controlDiv.find('.toggle_add_mode .control_icon'),
+            toggle_add_mode_icon: controlDiv.find('.toggle_add_mode'),
             participant_container: controlDiv.find('.participant_container'),
             control_labels: controlDiv.find('.control_label')
         }
     }
 
-    init_button_listeners() {
+    init_control_listeners() {
         this.controls.toggle_participant.click(function() {
             this.controls.participant_container.toggle();
         }.bind(this));
@@ -681,6 +701,26 @@ class GeoodleControl {
                     style="
                         width: 65px;
                     "/>
+
+                <!--
+                <button title="Participant transport mode" style="
+                        background: url(${ICON_URLS.directions_walk})
+                            no-repeat;
+                        background-position-y: center;
+                        background-position-x: 5px;
+                        background-color: lightgrey;
+                        background-size: 16px;
+                        padding-left: 21px;
+                        min-width: 26px;
+                        height: 26px;
+                        border: none;
+                        border-radius: 5px;
+                     "
+                    class="participant_transport">
+                    Participant transport mode
+                </button>
+                -->
+
                 <button
                     class="remove_participant">
                     X
