@@ -38,9 +38,11 @@ Cool things which inspired me or I'm making use of in this project (in no partic
   * ~~On infowindow open, focus on the description & select all~~
   * ~~Set your mode of transport~~
   * ~~Show approximate transport times/routes~~
+  * ~~Use geocoding instead of random names~~
   * On transport times:
     * ~~Show participant colour~~
     * ~~Show participant transport mode~~
+    * ~~Show suggestion colour~~
     * Show best & worst times
     * Show total best/worst times
     * Show max times

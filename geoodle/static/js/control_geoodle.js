@@ -493,7 +493,26 @@ class GeoodleControl {
 
     add_marker(type, latLng) {
         let owner = this.get_selected_participant();
-        this._add_marker(type, owner, chance.address(), latLng);
+
+        let geocoder = new google.maps.Geocoder;
+        geocoder.geocode(
+            {'location': latLng},
+            function(results, status) {
+                let label;
+
+                if (status === 'OK') {
+                    if (results) {
+                        label = results[0].formatted_address.split(',')[0];
+                    } else {
+                        label = 'No results found';
+                    }
+                } else {
+                    label = 'Geocoder failed: ' + status;
+                }
+
+                this._add_marker(type, owner, label, latLng);
+            }.bind(this)
+        );
     }
 
     _add_marker(type, owner, label, latLng) {
@@ -980,7 +999,10 @@ class GeoodleControl {
 
         // Constuct destination headers
         destinations.forEach(
-            marker_info => HTML += `<th>${marker_info.label || '??'}</th>`
+            marker_info => HTML += `
+                <th style="background-color: ${this.participants[marker_info.owner].color};">
+                    ${marker_info.label || '??'}
+                </th>`
         );
 
         HTML += '</thead><tbody>';
