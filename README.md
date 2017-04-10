@@ -36,8 +36,15 @@ Cool things which inspired me or I'm making use of in this project (in no partic
   * ~~Give random names/colours/labels~~
   * ~~Show description on hover~~
   * ~~On infowindow open, focus on the description & select all~~
-  * Set your mode of transport
-  * Show approximate transport times/routes
+  * ~~Set your mode of transport~~
+  * ~~Show approximate transport times/routes~~
+  * On transport times:
+    * ~~Show participant colour~~
+    * ~~Show participant transport mode~~
+    * Show best & worst times
+    * Show total best/worst times
+    * Show max times
+    * Show best max time
   * People can vote on which suggestions they like (or refuse to go to!)
   * Search for places
   * Confirm clearing of places/suggestions

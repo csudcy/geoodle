@@ -44,6 +44,10 @@ const BUTTONS = [
         text: 'Toggle adding points/suggestions',
         icon: ICON_URLS.point,
     }, {
+        klass: 'show_transport_times',
+        text: 'Show transport times',
+        icon: ICON_URLS.directions,
+    }, {
         klass: 'remove_all_markers',
         text: 'Clear points & suggestions',
         icon: ICON_URLS.delete,
@@ -57,6 +61,20 @@ const BUTTONS = [
         icon: ICON_URLS.help,
     }
 ];
+
+const TRANSPORT_MODES = [
+    'walk',
+    'transit',
+    'car',
+    'bike'
+];
+
+const TRANSPORT_MODE_MAP = {
+    'walk': 'WALKING',
+    'transit': 'TRANSIT',
+    'car': 'DRIVING',
+    'bike': 'BICYCLING'
+};
 
 
 class GeoodleControl {
@@ -168,10 +186,12 @@ class GeoodleControl {
                 </div>
             </div>`);
 
+        this.controlDiv = controlDiv;
         this.controls = {
             // Main buttons
             toggle_participant: controlDiv.find('.toggle_participant'),
             toggle_add_mode: controlDiv.find('.toggle_add_mode'),
+            show_transport_times: controlDiv.find('.show_transport_times'),
             remove_all_markers: controlDiv.find('.remove_all_markers'),
             move_to_center: controlDiv.find('.move_to_center'),
             show_hide_help: controlDiv.find('.show_hide_help'),
@@ -183,9 +203,8 @@ class GeoodleControl {
 
             // Other
             toggle_add_mode_icon: controlDiv.find('.toggle_add_mode'),
-            participant_container: controlDiv.find('.participant_container'),
-            control_labels: controlDiv.find('.control_label')
-        }
+            participant_container: controlDiv.find('.participant_container')
+        };
     }
 
     init_control_listeners() {
@@ -195,6 +214,10 @@ class GeoodleControl {
 
         this.controls.toggle_add_mode.click(function() {
             this.toggle_add_mode();
+        }.bind(this));
+
+        this.controls.show_transport_times.click(function() {
+            this.show_transport_times();
         }.bind(this));
 
         this.controls.remove_all_markers.click(function() {
@@ -208,7 +231,8 @@ class GeoodleControl {
         }.bind(this));
 
         this.controls.show_hide_help.click(function() {
-            this.controls.control_labels.toggle();
+            // Have to do this live as participant help need toggling too
+            this.controlDiv.find('.control_label').toggle();
         }.bind(this));
     }
 
@@ -233,6 +257,12 @@ class GeoodleControl {
             let target = $(e.target);
             let id = target.parent().attr('participant_id');
             this.update_participant(id, 'name', target.val());
+        }.bind(this))
+
+        this.controls.participant_list.on('click', '.participant_transport', function(e) {
+            let target = $(e.target);
+            let id = target.parent().attr('participant_id');
+            this.toggle_participant_transport(id);
         }.bind(this))
 
         this.controls.participant_list.on('click', '.remove_participant', function(e) {
@@ -583,6 +613,10 @@ class GeoodleControl {
 
     update_infowindow(updated_participant_id) {
         // updated_participant_id (optional): The participant that is being updated
+        if (!this.infowindow_marker_info) {
+            // There is no info_window open
+            return;
+        }
         if (updated_participant_id && updated_participant_id !== this.infowindow_marker_info.owner) {
             // There is a specific participant being udpate and it is not the
             // one the info window is for
@@ -675,7 +709,7 @@ class GeoodleControl {
     *             PARTICIPANTS             *
     \**************************************/
 
-    _get_participant_html(id, name, color) {
+    _get_participant_html(id, name, color, transport_mode) {
         return `
             <div
                 participant_id="${id}">
@@ -702,9 +736,8 @@ class GeoodleControl {
                         width: 65px;
                     "/>
 
-                <!--
                 <button title="Participant transport mode" style="
-                        background: url(${ICON_URLS.directions_walk})
+                        background: url(${ICON_URLS['directions_'+transport_mode]})
                             no-repeat;
                         background-position-y: center;
                         background-position-x: 5px;
@@ -717,9 +750,10 @@ class GeoodleControl {
                         border-radius: 5px;
                      "
                     class="participant_transport">
-                    Participant transport mode
+                    <span class="control_label" style="display: none;">
+                        Participant transport mode
+                    </span>
                 </button>
-                -->
 
                 <button
                     class="remove_participant">
@@ -728,26 +762,30 @@ class GeoodleControl {
             </div>`;
     }
 
-    add_participant(id, name, color) {
-        if (id === null) {
+    add_participant(id, name, color, transport_mode) {
+        if (id === null || id === undefined) {
             // Find an id for this participant
             id = 0;
             while (this.participants[id] !== undefined) {
                 id++;
             }
         }
-        if (name === null) {
+        if (name === null || name === undefined) {
             name = chance.first();
         }
-        if (color === null) {
+        if (color === null || color === undefined) {
             color = chance.color({format:'hex'});
+        }
+        if (transport_mode === null || transport_mode === undefined) {
+            transport_mode = 'walk';
         }
 
         // Add them to the list of participants
         this.participants[id] = {
             id: id,
             name: name,
-            color: color
+            color: color,
+            transport_mode: transport_mode
         };
 
         // Update UI
@@ -755,13 +793,20 @@ class GeoodleControl {
             this._get_participant_html(
                 id,
                 name,
-                color
+                color,
+                transport_mode
             )
         );
 
         // Let listeners know what's going on
         this.emit('add_participant', this.participants[id]);
         this.emit('update');
+    }
+
+    toggle_participant_transport(id) {
+        let index = TRANSPORT_MODES.indexOf(this.participants[id].transport_mode);
+        index = (index + 1) % TRANSPORT_MODES.length;
+        this.update_participant(id, 'transport_mode', TRANSPORT_MODES[index]);
     }
 
     update_participant(id, attr, value) {
@@ -772,10 +817,14 @@ class GeoodleControl {
         this.update_markers();
         this.update_selected_participant_color();
         this.update_infowindow(id);
-        this.update_info
+
         let participant_element = this.controls.participant_list.find(`[participant_id=${id}]`);
         participant_element.find('.participant_color').val(this.participants[id].color);
         participant_element.find('.participant_name').val(this.participants[id].name);
+        participant_element.find('.participant_transport').css(
+            'background-image',
+            `url(${ICON_URLS['directions_'+this.participants[id].transport_mode]})`
+        );
 
         // Let listeners know what's going on
         this.emit('update_participant', this.participants[id]);
@@ -863,6 +912,162 @@ class GeoodleControl {
     }
 
     /**************************************\
+    *           TRANSPORT TIMES            *
+    \**************************************/
+
+    show_transport_times() {
+        let participant_distances = {};
+
+        // Destinations are the same for everyone
+        let destinations = this.markers.filter(
+            marker_info => marker_info.type === 'suggestion'
+        ).map(
+            marker_info => marker_info.marker.getPosition()
+        );
+        let dms = new google.maps.DistanceMatrixService();
+
+        Object.keys(this.participants).forEach(function(participant_id) {
+            let origins = this.markers.filter(
+                marker_info => marker_info.owner === participant_id && marker_info.type === 'point'
+            ).map(
+                marker_info => marker_info.marker.getPosition()
+            );
+
+            dms.getDistanceMatrix({
+                    origins: origins,
+                    destinations: destinations,
+                    travelMode: google.maps.TravelMode[
+                        TRANSPORT_MODE_MAP[
+                            this.participants[participant_id].transport_mode
+                        ]
+                    ]
+                },
+                dms_callback.bind(this, participant_id));
+        }.bind(this));
+
+        function dms_callback(participant_id, response, status) {
+            if (status !== 'OK') {
+                console.log(participant_id, response, status);
+                alert('DMS failed!');
+                return;
+            }
+
+            // Add results to participant_distances
+            participant_distances[participant_id] = response.rows;
+
+            // Check if participant_distances is complete
+            if (Object.keys(participant_distances).length == Object.keys(this.participants).length) {
+                let HTML = this._get_transport_times_html(participant_distances);
+                this._show_transport_times(HTML);
+            }
+        }
+    }
+
+    _get_transport_times_html(participant_distances) {
+        let HTML = `
+            <table border="1" style="
+                    margin: auto;
+                    margin-top: 10px;">
+                <thead>
+                    <!--Participant & Source-->
+                    <th colspan="2"></th>
+        `;
+
+        // Destinations are the same for everyone
+        let destinations = this.markers.filter(
+            marker_info => marker_info.type === 'suggestion'
+        );
+
+        // Constuct destination headers
+        destinations.forEach(
+            marker_info => HTML += `<th>${marker_info.label || '??'}</th>`
+        );
+
+        HTML += '</thead><tbody>';
+
+        // Construct participant rows
+        Object.keys(this.participants).forEach(function(participant_id) {
+            let participant = this.participants[participant_id];
+            let origins = this.markers.filter(
+                marker_info => marker_info.owner === participant_id && marker_info.type === 'point'
+            );
+
+            // Add participant header
+            HTML += `
+                <tr>
+                    <td rowspan="${origins.length}" style="
+                        background-color: ${participant.color};
+                        ">
+                        ${participant.name || '??'}
+                        <br/>
+                        <span title="Participant transport mode" style="
+                            background: url(${ICON_URLS['directions_'+participant.transport_mode]})
+                                no-repeat center;
+                            background-color: lightgrey;
+                            background-size: 16px;
+                            min-width: 16px;
+                            height: 16px;
+                            padding: 5px;
+                            border-radius: 5px;
+                            display: inline-block;
+                        ">
+                        </span>
+
+                    </td>`;
+
+            // Construct origin rows
+            origins.forEach(function(origin_marker_info, origin_index) {
+                // Add origin header
+                HTML += `
+                    <td>
+                        ${origin_marker_info.label || '??'}
+                    </td>`;
+
+                // Construct destination rows
+                destinations.forEach(function(destination_marker_info, destination_index) {
+                    let result = participant_distances[participant_id][origin_index].elements[destination_index];
+                    // Add destination cell
+                    HTML += `
+                        <td style="text-align: right;">
+                            ${result.duration.text}
+                        </td>`;
+                });
+
+                // Close the row
+                // TODO: Only open new TR if not last row
+                HTML += '</tr><tr>';
+            });
+            // HAX
+            HTML += '</tr>';
+
+        }.bind(this));
+
+        HTML += '</tbody></table>';
+
+        return HTML;
+    }
+
+    _show_transport_times(HTML) {
+        let control = $(`
+            <div style="
+                    position: absolute;
+                    top: 0px;
+                    bottom: 0px;
+                    left: 0px;
+                    right: 0px;
+                    background-color: white;
+                ">
+                ${HTML}
+            </div>
+        `);
+        $('body').append(control);
+
+        control.click(function() {
+            control.remove();
+        });
+    }
+
+    /**************************************\
     *            SERIALISATION             *
     \**************************************/
 
@@ -923,7 +1128,8 @@ class GeoodleControl {
             participant => this.add_participant(
                 participant.id,
                 participant.name,
-                participant.color
+                participant.color,
+                participant.transport_mode
             )
         );
 
