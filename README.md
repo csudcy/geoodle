@@ -43,6 +43,7 @@ Cool things which inspired me or I'm making use of in this project (in no partic
     * ~~Show participant colour~~
     * ~~Show participant transport mode~~
     * ~~Show suggestion colour~~
+    * Sort participants, places & suggestions by name
     * Show best & worst times
     * Show total best/worst times
     * Show max times

@@ -296,8 +296,7 @@ class GeoodleControl {
                 return this.hide_infowindow();
             }
             if (this.add_mode == 'point') {
-                this.add_marker('point', e.latLng);
-                this.update_center_marker();
+                this.add_marker('point', e.latLng, this.update_center_marker.bind(this));
             } else {
                 this.add_marker('suggestion', e.latLng);
             }
@@ -491,7 +490,7 @@ class GeoodleControl {
         );
     }
 
-    add_marker(type, latLng) {
+    add_marker(type, latLng, callback) {
         let owner = this.get_selected_participant();
 
         let geocoder = new google.maps.Geocoder;
@@ -511,6 +510,10 @@ class GeoodleControl {
                 }
 
                 this._add_marker(type, owner, label, latLng);
+
+                if (callback) {
+                    callback();
+                }
             }.bind(this)
         );
     }
