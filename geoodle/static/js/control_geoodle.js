@@ -28,6 +28,7 @@ const ICON_URLS = {
     directions_car: '/static/icons/ic_directions_car_black_24px.svg',
     directions_transit: '/static/icons/ic_directions_transit_black_24px.svg',
     directions_walk: '/static/icons/ic_directions_walk_black_24px.svg',
+    folder: '/static/icons/ic_folder_black_24px.svg',
     help: '/static/icons/ic_help_outline_black_24px.svg',
     participant: '/static/icons/ic_person_black_24px.svg',
     point: '/static/icons/ic_home_black_24px.svg',
@@ -36,6 +37,10 @@ const ICON_URLS = {
 
 const BUTTONS = [
     {
+        klass: 'toggle_geoodle',
+        text: 'Manage Geoodle\'s',
+        icon: ICON_URLS.folder,
+    }, {
         klass: 'toggle_participant',
         text: 'Manage participants',
         icon: ICON_URLS.participant,
@@ -85,9 +90,10 @@ class GeoodleControl {
         this.map = map;
         this.center = center;
 
-        this.participants = {};
-        this.markers = [];
+        this.geoodles = {};
+
         this.add_mode = 'point';
+        this.selected_geoodle_id = null;
         this.selected_participant_id = null;
         this.infowindow_marker_info = null;
 
@@ -159,12 +165,17 @@ class GeoodleControl {
                     ">
                     ${BUTTON_HTML}
                 </span>
+
                 <span
                     class="participant_container"
                     style="
                         float: left;
                         text-align: center;
                         display: none;
+                        border: 1px solid black;
+                        border-radius: 5px;
+                        padding: 2px;
+                        margin-left: 3px;
                     ">
                     Participants:
                     <div class="participant_list">
@@ -179,6 +190,27 @@ class GeoodleControl {
                         Clear Participants
                     </button>
                 </span>
+
+                <span
+                    class="geoodle_container"
+                    style="
+                        float: left;
+                        text-align: center;
+                        display: none;
+                        border: 1px solid black;
+                        border-radius: 5px;
+                        padding: 2px;
+                        margin-left: 3px;
+                    ">
+                    Geoodles:
+                    <div class="geoodle_list">
+                    </div>
+                    <button
+                        class="add_geoodle">
+                        Add Geoodle
+                    </button>
+                </span>
+
                 <div
                     style="
                         clear: both;
@@ -189,6 +221,7 @@ class GeoodleControl {
         this.controlDiv = controlDiv;
         this.controls = {
             // Main buttons
+            toggle_geoodle: controlDiv.find('.toggle_geoodle'),
             toggle_participant: controlDiv.find('.toggle_participant'),
             toggle_add_mode: controlDiv.find('.toggle_add_mode'),
             show_transport_times: controlDiv.find('.show_transport_times'),
@@ -201,13 +234,21 @@ class GeoodleControl {
             add_participant: controlDiv.find('.add_participant'),
             remove_all_participants: controlDiv.find('.remove_all_participants'),
 
-            // Other
-            toggle_add_mode_icon: controlDiv.find('.toggle_add_mode'),
-            participant_container: controlDiv.find('.participant_container')
+            // Geoodle buttons
+            geoodle_list: controlDiv.find('.geoodle_list'),
+            add_geoodle: controlDiv.find('.add_geoodle'),
+
+            // Containers
+            participant_container: controlDiv.find('.participant_container'),
+            geoodle_container: controlDiv.find('.geoodle_container')
         };
     }
 
     init_control_listeners() {
+        this.controls.toggle_geoodle.click(function() {
+            this.controls.geoodle_container.toggle();
+        }.bind(this));
+
         this.controls.toggle_participant.click(function() {
             this.controls.participant_container.toggle();
         }.bind(this));
@@ -484,15 +525,13 @@ class GeoodleControl {
             this.add_mode = 'suggestion';
         }
 
-        this.controls.toggle_add_mode_icon.css(
+        this.controls.toggle_add_mode.css(
             'background-image',
             `url(${ICON_URLS[this.add_mode]})`
         );
     }
 
     add_marker(type, latLng, callback) {
-        let owner = this.get_selected_participant();
-
         let geocoder = new google.maps.Geocoder;
         geocoder.geocode(
             {'location': latLng},
@@ -509,6 +548,7 @@ class GeoodleControl {
                     label = 'Geocoder failed: ' + status;
                 }
 
+                let owner = this.get_selected_participant();
                 this._add_marker(type, owner, label, latLng);
 
                 if (callback) {
@@ -519,10 +559,12 @@ class GeoodleControl {
     }
 
     _add_marker(type, owner, label, latLng) {
+        let geoodle = this.get_selected_geoodle();
+
         let marker = new google.maps.Marker({
             icon: {
                 path: SVG_PATHS[type],
-                fillColor: this.participants[owner].color,
+                fillColor: geoodle.participants[owner].color,
                 fillOpacity: 1,
                 anchor: {x: 12, y: 12}
             },
@@ -537,7 +579,7 @@ class GeoodleControl {
             label: label,
             marker: marker
         };
-        this.markers.push(marker_info);
+        geoodle.markers.push(marker_info);
 
         marker.addListener('click', function() {
             this.show_infowindow(marker_info);
@@ -575,6 +617,8 @@ class GeoodleControl {
     }
 
     _remove_marker(marker_info) {
+        let geoodle = this.get_selected_geoodle();
+
         // If the info window belongs to this marker, close it
         if (marker_info == this.infowindow_marker_info) {
             this.hide_infowindow();
@@ -583,16 +627,18 @@ class GeoodleControl {
         // Remove the given marker
         marker_info.marker.setMap(null);
 
-        this.markers = this.markers.filter(
+        geoodle.markers = geoodle.markers.filter(
             check_marker_info => check_marker_info !== marker_info
         );
     }
 
     remove_all_markers() {
+        let geoodle = this.get_selected_geoodle();
+
         let owner = this.get_selected_participant();
         if (owner === undefined) return;
 
-        this.markers.filter(
+        geoodle.markers.filter(
             marker_info => marker_info.owner == owner
         ).forEach(
             marker_info => this._remove_marker(marker_info)
@@ -600,12 +646,14 @@ class GeoodleControl {
     }
 
     update_markers() {
+        let geoodle = this.get_selected_geoodle();
+
         // Update all the markers
-        this.markers.forEach(function(marker_info) {
+        geoodle.markers.forEach(function(marker_info) {
             let marker = marker_info.marker;
             marker.setIcon({
                 path: SVG_PATHS[marker_info.type],
-                fillColor: this.participants[marker_info.owner].color,
+                fillColor: geoodle.participants[marker_info.owner].color,
                 fillOpacity: marker.icon.fillOpacity,
                 anchor: marker.icon.anchor
             });
@@ -654,16 +702,18 @@ class GeoodleControl {
     }
 
     _update_window_info(marker_info, controls) {
+        let geoodle = this.get_selected_geoodle();
+
         controls.icon.css(
             'background',
             `url(${ICON_URLS[marker_info.type]}) no-repeat center`
         );
         controls.icon.css(
             'background-color',
-            this.participants[marker_info.owner].color
+            geoodle.participants[marker_info.owner].color
         );
         controls.name.text(
-            this.participants[marker_info.owner].name
+            geoodle.participants[marker_info.owner].name
         );
         if (controls.description_input) {
             controls.description_input.val(
@@ -699,10 +749,12 @@ class GeoodleControl {
     \**************************************/
 
     update_center_marker() {
+        let geoodle = this.get_selected_geoodle();
+
         let lat = 0,
             lng = 0,
             point_count = 0;
-        this.markers.forEach(function(marker_info) {
+        geoodle.markers.forEach(function(marker_info) {
             if (marker_info.type == 'point') {
                 let latLng = marker_info.marker.getPosition();
                 lat += latLng.lat();
@@ -785,10 +837,12 @@ class GeoodleControl {
     }
 
     add_participant(id, name, color, transport_mode) {
+        let geoodle = this.get_selected_geoodle();
+
         if (id === null || id === undefined) {
             // Find an id for this participant
             id = 0;
-            while (this.participants[id] !== undefined) {
+            while (geoodle.participants[id] !== undefined) {
                 id++;
             }
         }
@@ -803,7 +857,7 @@ class GeoodleControl {
         }
 
         // Add them to the list of participants
-        this.participants[id] = {
+        geoodle.participants[id] = {
             id: id,
             name: name,
             color: color,
@@ -821,19 +875,23 @@ class GeoodleControl {
         );
 
         // Let listeners know what's going on
-        this.emit('add_participant', this.participants[id]);
+        this.emit('add_participant', geoodle.participants[id]);
         this.emit('update');
     }
 
     toggle_participant_transport(id) {
-        let index = TRANSPORT_MODES.indexOf(this.participants[id].transport_mode);
+        let geoodle = this.get_selected_geoodle();
+
+        let index = TRANSPORT_MODES.indexOf(geoodle.participants[id].transport_mode);
         index = (index + 1) % TRANSPORT_MODES.length;
         this.update_participant(id, 'transport_mode', TRANSPORT_MODES[index]);
     }
 
     update_participant(id, attr, value) {
+        let geoodle = this.get_selected_geoodle();
+
         // Update the participant
-        this.participants[id][attr] = value;
+        geoodle.participants[id][attr] = value;
 
         // Update UI
         this.update_markers();
@@ -841,24 +899,26 @@ class GeoodleControl {
         this.update_infowindow(id);
 
         let participant_element = this.controls.participant_list.find(`[participant_id=${id}]`);
-        participant_element.find('.participant_color').val(this.participants[id].color);
-        participant_element.find('.participant_name').val(this.participants[id].name);
+        participant_element.find('.participant_color').val(geoodle.participants[id].color);
+        participant_element.find('.participant_name').val(geoodle.participants[id].name);
         participant_element.find('.participant_transport').css(
             'background-image',
-            `url(${ICON_URLS['directions_'+this.participants[id].transport_mode]})`
+            `url(${ICON_URLS['directions_'+geoodle.participants[id].transport_mode]})`
         );
 
         // Let listeners know what's going on
-        this.emit('update_participant', this.participants[id]);
+        this.emit('update_participant', geoodle.participants[id]);
         this.emit('update');
     }
 
     remove_participant(id) {
+        let geoodle = this.get_selected_geoodle();
+
         // Remove the participant
-        delete this.participants[id];
+        delete geoodle.participants[id];
 
         // Remove the participants markers
-        this.markers.filter(
+        geoodle.markers.filter(
             marker_info => marker_info.owner == id
         ).forEach(
             marker_info => this._remove_marker(marker_info)
@@ -890,7 +950,7 @@ class GeoodleControl {
         // Update which markers can be edited
         // TODO: Don't show hand icon over undraggable markers
         // TODO: Don't add a marker at the end of a failed drag
-        // this.markers.forEach(function(marker_info) {
+        // geoodle.markers.forEach(function(marker_info) {
         //     marker_info.marker.setDraggable(
         //         marker_info.owner == this.selected_participant_id
         //     );
@@ -902,23 +962,27 @@ class GeoodleControl {
     }
 
     update_selected_participant_color() {
+        let geoodle = this.get_selected_geoodle();
+
         let color = 'lightgrey';
         if (this.selected_participant_id !== null) {
-            color = this.participants[this.selected_participant_id].color;
+            color = geoodle.participants[this.selected_participant_id].color;
         }
         this.controls.toggle_participant.css('background-color', color);
     }
 
     get_selected_participant() { 
+        let geoodle = this.get_selected_geoodle();
+
         // If there are no participants, add one
-        if (Object.keys(this.participants).length === 0) {
+        if (Object.keys(geoodle.participants).length === 0) {
             this.add_participant(null, null, null);
             noty({text: 'I added a default participant'});
         }
 
         // If there is no selected participant, select one
         if (this.selected_participant_id === null) {
-            this.set_selected_participant(Object.keys(this.participants)[0]);
+            this.set_selected_participant(Object.keys(geoodle.participants)[0]);
             noty({text: 'I selected a participant'});
         }
 
@@ -926,7 +990,9 @@ class GeoodleControl {
     }
 
     remove_all_participants() {
-        Object.keys(this.participants).forEach(
+        let geoodle = this.get_selected_geoodle();
+
+        Object.keys(geoodle.participants).forEach(
             participant_id => this.remove_participant(participant_id)
         );
         this.update_center_marker();
@@ -938,18 +1004,20 @@ class GeoodleControl {
     \**************************************/
 
     show_transport_times() {
+        let geoodle = this.get_selected_geoodle();
+
         let participant_distances = {};
 
         // Destinations are the same for everyone
-        let destinations = this.markers.filter(
+        let destinations = geoodle.markers.filter(
             marker_info => marker_info.type === 'suggestion'
         ).map(
             marker_info => marker_info.marker.getPosition()
         );
         let dms = new google.maps.DistanceMatrixService();
 
-        Object.keys(this.participants).forEach(function(participant_id) {
-            let origins = this.markers.filter(
+        Object.keys(geoodle.participants).forEach(function(participant_id) {
+            let origins = geoodle.markers.filter(
                 marker_info => marker_info.owner === participant_id && marker_info.type === 'point'
             ).map(
                 marker_info => marker_info.marker.getPosition()
@@ -960,7 +1028,7 @@ class GeoodleControl {
                     destinations: destinations,
                     travelMode: google.maps.TravelMode[
                         TRANSPORT_MODE_MAP[
-                            this.participants[participant_id].transport_mode
+                            geoodle.participants[participant_id].transport_mode
                         ]
                     ]
                 },
@@ -978,7 +1046,7 @@ class GeoodleControl {
             participant_distances[participant_id] = response.rows;
 
             // Check if participant_distances is complete
-            if (Object.keys(participant_distances).length == Object.keys(this.participants).length) {
+            if (Object.keys(participant_distances).length == Object.keys(geoodle.participants).length) {
                 let HTML = this._get_transport_times_html(participant_distances);
                 this._show_transport_times(HTML);
             }
@@ -986,6 +1054,8 @@ class GeoodleControl {
     }
 
     _get_transport_times_html(participant_distances) {
+        let geoodle = this.get_selected_geoodle();
+
         let HTML = `
             <table border="1" style="
                     margin: auto;
@@ -996,14 +1066,14 @@ class GeoodleControl {
         `;
 
         // Destinations are the same for everyone
-        let destinations = this.markers.filter(
+        let destinations = geoodle.markers.filter(
             marker_info => marker_info.type === 'suggestion'
         );
 
         // Constuct destination headers
         destinations.forEach(
             marker_info => HTML += `
-                <th style="background-color: ${this.participants[marker_info.owner].color};">
+                <th style="background-color: ${geoodle.participants[marker_info.owner].color};">
                     ${marker_info.label || '??'}
                 </th>`
         );
@@ -1011,9 +1081,9 @@ class GeoodleControl {
         HTML += '</thead><tbody>';
 
         // Construct participant rows
-        Object.keys(this.participants).forEach(function(participant_id) {
-            let participant = this.participants[participant_id];
-            let origins = this.markers.filter(
+        Object.keys(geoodle.participants).forEach(function(participant_id) {
+            let participant = geoodle.participants[participant_id];
+            let origins = geoodle.markers.filter(
                 marker_info => marker_info.owner === participant_id && marker_info.type === 'point'
             );
 
@@ -1093,60 +1163,279 @@ class GeoodleControl {
     }
 
     /**************************************\
+    *          GEOODLE MANAGEMENT          *
+    \**************************************/
+
+
+
+    _get_participant_html(id, name) {
+        return `
+            <div
+                participant_id="${id}">
+                <input
+                    type="radio"
+                    name="selected_participant">
+                <input
+                    class="participant_color"
+                    title="Set participant colour"
+                    type="color"
+                    value="${color}"
+                    style="
+                        border: none;
+                        border-radius: 5px;
+                        width: 20px;
+                    "/>
+                <input
+                    class="participant_name"
+                    title="Enter participants name"
+                    placeholder="Participant name"
+                    type="text"
+                    value="${name}"
+                    style="
+                        width: 65px;
+                    "/>
+
+                <button title="Participant transport mode" style="
+                        background: url(${ICON_URLS['directions_'+transport_mode]})
+                            no-repeat;
+                        background-position-y: center;
+                        background-position-x: 5px;
+                        background-color: lightgrey;
+                        background-size: 16px;
+                        padding-left: 21px;
+                        min-width: 26px;
+                        height: 26px;
+                        border: none;
+                        border-radius: 5px;
+                     "
+                    class="participant_transport">
+                    <span class="control_label" style="display: none;">
+                        Participant transport mode
+                    </span>
+                </button>
+
+                <button
+                    class="remove_participant">
+                    X
+                </button>
+            </div>`;
+    }
+
+    add_participant(id, name) {
+        let geoodle = this.get_selected_geoodle();
+
+        if (id === null || id === undefined) {
+            // Find an id for this participant
+            id = 0;
+            while (geoodle.participants[id] !== undefined) {
+                id++;
+            }
+        }
+        if (name === null || name === undefined) {
+            name = chance.first();
+        }
+        if (color === null || color === undefined) {
+            color = chance.color({format:'hex'});
+        }
+        if (transport_mode === null || transport_mode === undefined) {
+            transport_mode = 'walk';
+        }
+
+        // Add them to the list of participants
+        geoodle.participants[id] = {
+            id: id,
+            name: name,
+            color: color,
+            transport_mode: transport_mode
+        };
+
+        // Update UI
+        this.controls.participant_list.append(
+            this._get_participant_html(
+                id,
+                name,
+                color,
+                transport_mode
+            )
+        );
+
+        // Let listeners know what's going on
+        this.emit('add_participant', geoodle.participants[id]);
+        this.emit('update');
+    }
+
+    update_participant(id, attr, value) {
+        let geoodle = this.get_selected_geoodle();
+
+        // Update the participant
+        geoodle.participants[id][attr] = value;
+
+        // Update UI
+        this.update_markers();
+        this.update_selected_participant_color();
+        this.update_infowindow(id);
+
+        let participant_element = this.controls.participant_list.find(`[participant_id=${id}]`);
+        participant_element.find('.participant_color').val(geoodle.participants[id].color);
+        participant_element.find('.participant_name').val(geoodle.participants[id].name);
+        participant_element.find('.participant_transport').css(
+            'background-image',
+            `url(${ICON_URLS['directions_'+geoodle.participants[id].transport_mode]})`
+        );
+
+        // Let listeners know what's going on
+        this.emit('update_participant', geoodle.participants[id]);
+        this.emit('update');
+    }
+
+    remove_participant(id) {
+        let geoodle = this.get_selected_geoodle();
+
+        // Remove the participant
+        delete geoodle.participants[id];
+
+        // Remove the participants markers
+        geoodle.markers.filter(
+            marker_info => marker_info.owner == id
+        ).forEach(
+            marker_info => this._remove_marker(marker_info)
+        );
+        this.update_center_marker();
+
+        // Unset selected participant if necessary
+        if (this.selected_participant_id === id) {
+            this.set_selected_participant(null);
+        }
+
+        // Update UI
+        this.controls.participant_list.find(`[participant_id=${id}]`).remove();
+
+        // Let listeners know what's going on
+        this.emit('remove_participant', id);
+        this.emit('update');
+    }
+
+    set_selected_participant(id) {
+        // Set selected participant
+        this.selected_participant_id = id;
+
+        // Update UI
+        let selected_participant_element = this.controls.participant_list.find(`[participant_id=${id}] input[type="radio"]`);
+        selected_participant_element.prop('checked', true);
+        this.update_selected_participant_color();
+
+        // Update which markers can be edited
+        // TODO: Don't show hand icon over undraggable markers
+        // TODO: Don't add a marker at the end of a failed drag
+        // geoodle.markers.forEach(function(marker_info) {
+        //     marker_info.marker.setDraggable(
+        //         marker_info.owner == this.selected_participant_id
+        //     );
+        // }.bind(this));
+
+        // Let listeners know what's going on
+        this.emit('set_selected_participant', id);
+        this.emit('update');
+    }
+
+    get_selected_geoodle() {
+        let geoodle = this.get_selected_geoodle();
+
+        // If there are no Geoodles, add one
+        if (Object.keys(this.geoodles).length === 0) {
+            this.add_geoodle(null, null, null);
+            noty({text: 'I added a default Geoodle'});
+        }
+
+        // If there is no selected geoodle, select one
+        if (this.selected_geoodle_id === null) {
+            this.set_selected_geoodle(Object.keys(this.geoodles)[0]);
+            noty({text: 'I selected a Geoodle'});
+        }
+
+        return this.geoodles[this.selected_geoodle_id];
+    }
+
+
+
+    /**************************************\
     *            SERIALISATION             *
     \**************************************/
 
     serialise() {
+        let geoodle = this.get_selected_geoodle();
+
         /*
         {
-            participants: [
-                {
-                    id: 1,
-                    name: 'Nick',
-                    color: 'purple',
-                },
-                ...
-            }],
-            markers: [
-                {
-                    owner: <participant_id>,
-                    type: <point or suggestion>,
-                    lat: ...,
-                    lng: ...,
-                    label: ...
-                },
-                ...
-            ]
+            <geoodle_id>: {
+                name: <geoodle_name>,
+                participants: [
+                    {
+                        id: 1,
+                        name: 'Nick',
+                        color: 'purple',
+                    },
+                    ...
+                }],
+                markers: [
+                    {
+                        owner: <participant_id>,
+                        type: <point or suggestion>,
+                        lat: ...,
+                        lng: ...,
+                        label: ...
+                    },
+                    ...
+                ]
+            }
         }
         */
+        let geoodles = {};
 
-        let markers = [];
-        this.markers.forEach(function(marker_info) {
-            let latLng = marker_info.marker.getPosition();
-            markers.push({
-                owner: marker_info.owner,
-                type: marker_info.type,
-                label: marker_info.label,
-                lat: latLng.lat(),
-                lng: latLng.lng()
-            })
-        });
+        Object.keys(this.geoodles).forEach(function(geoodle_id) {
+            let geoodle = this.geoodles[geoodle_id];
 
-        // Safari doesn't have object.values :(
-        let participants = Object.keys(this.participants).map(
-            key => this.participants[key]
-        );
+            let markers = [];
+            geoodle.markers.forEach(function(marker_info) {
+                let latLng = marker_info.marker.getPosition();
+                markers.push({
+                    owner: marker_info.owner,
+                    type: marker_info.type,
+                    label: marker_info.label,
+                    lat: latLng.lat(),
+                    lng: latLng.lng()
+                })
+            });
 
-        return {
-            color: this.color,
-            participants: participants,
-            markers: markers
-        };
+            // Safari doesn't have object.values :(
+            let participants = Object.keys(geoodle.participants).map(
+                key => geoodle.participants[key]
+            );
+
+            geoodles[geoodle_id] = {
+                name: geoodle.name,
+                participants: participants,
+                markers: markers
+            };
+        }.bind(this));
+
+        return geoodles;
     }
 
     deserialise(input) {
         // Remove all participants & markers
-        this.remove_all_participants();
+        // this.remove_all_participants();
+
+        if (input.participants) {
+            // This was serialised before multiple Geoodles; update it!
+            input = {
+                _get_geoodle_id(): {
+                    name: 'Hello, Geoodle!',
+                    participants: input.participants,
+                    markers: input.markers
+                }
+            };
+        }
 
         // Load participants
         input.participants.forEach(

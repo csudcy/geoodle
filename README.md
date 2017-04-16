@@ -52,6 +52,8 @@ Cool things which inspired me or I'm making use of in this project (in no partic
   * Search for places
   * Confirm clearing of places/suggestions
   * Move to localStorage
+  * Allow multiple maps
+  * Move Geoodle data to it's own class?
 * Serverside version
   * Login (by name to start with, by social login later)
   * Create a Geoodle
