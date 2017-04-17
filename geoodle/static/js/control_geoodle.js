@@ -338,12 +338,7 @@ class GeoodleControl {
             if (this.infowindow_geoodle_marker !== null) {
                 return this.hide_infowindow();
             }
-            if (this.add_mode == 'point') {
-                this.add_marker('point', e.latLng, this.update_center_marker.bind(this));
-            } else {
-                this.add_marker('suggestion', e.latLng);
-            }
-            this.emit('update');
+            this.add_marker(e.latLng);
         }.bind(this));
     }
 
@@ -542,7 +537,7 @@ class GeoodleControl {
         this.geoodle_list.on('set_add_mode', function(add_mode) {
             this.controls.toggle_add_mode.css(
                 'background-image',
-                `url(${ICON_URLS[this.add_mode]})`
+                `url(${ICON_URLS[add_mode]})`
             );
         }.bind(this));
     }
@@ -596,7 +591,7 @@ class GeoodleControl {
             // }.bind(this));
 
             // Let listeners know what's going on
-            this.emit('set_selected_participant', id);
+            // this.emit('set_selected_participant', id);
             this.emit('update');
         }.bind(this));
 
@@ -750,7 +745,7 @@ class GeoodleControl {
     }
 
     get_add_mode() {
-        return this.geoodle_list.get_selected_geoodle().get_add_mode();
+        return this.geoodle_list.get_selected_geoodle().add_mode;
     }
 
     get_selected_participant() {
@@ -789,9 +784,9 @@ class GeoodleControl {
 
 
     add_marker(latLng) {
-        geocode(latLng, function(label) {
+        this.geocode(latLng, function(label) {
             this.get_selected_participant().add_marker(
-                this.get_add_mode(), label, latLng
+                null, this.get_add_mode(), latLng.lat(), latLng.lng(), label
             );
         }.bind(this));
     }

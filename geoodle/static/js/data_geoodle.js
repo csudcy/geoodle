@@ -12,8 +12,8 @@ class Geoodle {
         this.name = name;
 
         // Other stuff
+        this._selected_participant_id = null;
         this.participants = {};
-        this.selected_participant = null;
         this.add_mode = 'point';
     }
 
@@ -70,24 +70,25 @@ class Geoodle {
     }
 
     set_selected_participant(unique_id) {
-        this.selected_participant_id = participant_id;
-        this.emit('set_selected_participant', this.participants[participant_id]);
+        this._selected_participant_id = unique_id;
+        this.emit('set_selected_participant', this.participants[unique_id]);
     }
 
     get_selected_participant() {
         // If there are no participants, add one
         if (Object.keys(this.participants).length === 0) {
-            this.add_participant();
-            this.emit('notify', 'I added a default participant');
+            let participant = this.add_participant();
+            this.emit('notify', 'I added a participant: "${participant.name}"');
         }
 
         // If there is no selected participant, select one
-        if (this.selected_participant_id === null) {
-            this.set_selected_participant(Object.keys(this.participants)[0]);
-            this.emit('notify', 'I selected a participant');
+        if (this._selected_participant_id === null || this._selected_participant_id === undefined) {
+            let participant = Object.values(this.participants)[0];
+            this.set_selected_participant(participant.unique_id);
+            this.emit('notify', `I selected a participant: "${participant.name}"`);
         }
 
-        return this.participants[this.selected_participant_id];
+        return this.participants[this._selected_participant_id];
     }
 
     /**************************************\
@@ -149,7 +150,7 @@ class Geoodle {
         return {
             id: this.id,
             name: this.name,
-            selected_participant_id: this.selected_participant_id,
+            selected_participant_id: this._selected_participant_id,
             add_mode: this.add_mode,
             participants: Object.values(this.participants).map(
                 participant => participant.serialise()

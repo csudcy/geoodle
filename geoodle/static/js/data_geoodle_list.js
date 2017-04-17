@@ -2,8 +2,8 @@
 class GeoodleList {
     constructor() {
         // Other stuff
-        this.geoodles = {};
         this._selected_geoodle_id = null;
+        this.geoodles = {};
     }
 
     /**************************************\
@@ -35,14 +35,14 @@ class GeoodleList {
     }
 
     get_selected_geoodle() {
-        // If there are no participants, add one
+        // If there are no geoodles, add one
         if (!Object.keys(this.geoodles)) {
-            this.add_geoodle();
-            this.emit('notify', 'I added a Geoodle');
+            let geoodle = this.add_geoodle();
+            this.emit('notify', `I added a Geoodle: "${geoodle.name}"`);
         }
 
-        // If there is no selected participant, select one
-        if (this._selected_geoodle_id === null) {
+        // If there is no selected geoodle, select one
+        if (this._selected_geoodle_id === null || this._selected_geoodle_id === undefined) {
             let geoodle = Object.values(this.geoodles)[0];
             this.set_selected_geoodle(geoodle.unique_id);
             this.emit('notify', `I selected a Geoodle: "${geoodle.name}"`);
