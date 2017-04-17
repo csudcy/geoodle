@@ -123,6 +123,7 @@ Emitter.prototype.removeEventListener = function(event, fn){
  */
 
 Emitter.prototype.emit = function(event){
+  // console.log('Emit: ', event);
   this._callbacks = this._callbacks || {};
   var args = [].slice.call(arguments, 1)
     , callbacks = this._callbacks['$' + event];

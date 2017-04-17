@@ -15,11 +15,12 @@ function initMap() {
 
     // Whenever there is an update on the map, update the URL hash
     geoodleControl.on('update', function() {
-        window.location.hash = btoa(
-            JSON.stringify(
-                geoodleControl.serialise()
-            )
-        );
+        // TODO
+        // window.location.hash = btoa(
+        //     JSON.stringify(
+        //         geoodleControl.serialise()
+        //     )
+        // );
     });
 
     // If there is a URL hash, use it!

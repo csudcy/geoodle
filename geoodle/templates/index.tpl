@@ -22,7 +22,13 @@
     <script src="/static/js/jquery.noty.packaged.js"></script>
     <script src="/static/js/emitter.js"></script>
     <script src="/static/js/chance.js"></script>
+
+    <script src="/static/js/data_geoodle_list.js"></script>
+    <script src="/static/js/data_geoodle.js"></script>
+    <script src="/static/js/data_participant.js"></script>
+    <script src="/static/js/data_marker.js"></script>
     <script src="/static/js/control_geoodle.js"></script>
+
     <script src="/static/js/control_login.js"></script>
     <script src="/static/js/index.js"></script>
     <script async defer src="https://maps.googleapis.com/maps/api/js?key={{google_api_key}}&callback=initMap"></script>
