@@ -1,38 +1,55 @@
 
 class Geoodle {
     constructor(geoodle_list, id, name) {
+        // Save parent
         this.geoodle_list = geoodle_list;
 
-        this.id = id;
+        // Validate input
+        name = name || 'Hello, Geoodle!';
+
+        // Save attributes
+        this._set_id(id);
         this.name = name;
+
+        // Other stuff
         this.participants = {};
         this.selected_participant = null;
         this.add_mode = 'point';
-
-        this.unique_id = Geoodle.make_unique_id(id);
     }
 
-    static make_unique_id(id) {
-        return `geoodle_${id}`;
+    _make_unique_id(id) {
+        return `geoodle_${id || this.id}`;
+    }
+
+    _set_id(id) {
+        // Check ID is not actually changing
+        if (this.id !== null && this.id !== undefined) {
+            if (this.id !== id) {
+                throw new Error(`You cannot change Geoodle ID from ${this.id} to ${id}!`);
+            }
+        }
+
+        if (id === null || id === undefined) {
+            // Find an id for this participant
+            id = 0;
+            while (this.geoodle_list.id_exists(this._make_unique_id(id))) {
+                id++;
+            }
+        }
+        this.id = id;
+        this.unique_id = this._make_unique_id();
     }
 
     /**************************************\
     *            SUB LIST MGMT             *
     \**************************************/
 
-    add_participant(id, name, color, transport_mode) {
-        if (id === null || id === undefined) {
-            // Find an id for this participant
-            id = 0;
-            while (this.participants[Participant.make_unique_id(this, id)] !== undefined) {
-                id++;
-            }
-        }
-        name = name || chance.first();
-        color = color || chance.color({format:'hex'});
-        transport_mode = transport_mode || 'walk';
+    id_exists(unique_id) {
+        return this.participants[unique_id] !== undefined;
+    }
 
-        // Add them to the list of participants
+    add_participant(id, name, color, transport_mode) {
+        // Create it & add it to the list
         let participant = new Participant(
             this,
             id,
@@ -40,10 +57,6 @@ class Geoodle {
             color,
             transport_mode
         );
-        this._add_participant(participant);
-    }
-
-    _add_participant(participant) {
         this.participants[participant.unique_id] = participant;
 
         // Catch events
@@ -52,6 +65,8 @@ class Geoodle {
         });
 
         this.emit('add_participant', participant);
+
+        return participant;
     }
 
     set_selected_participant(unique_id) {
@@ -61,14 +76,14 @@ class Geoodle {
 
     get_selected_participant() {
         // If there are no participants, add one
-        if (Object.keys(geoodle.participants).length === 0) {
+        if (Object.keys(this.participants).length === 0) {
             this.add_participant();
             this.emit('notify', 'I added a default participant');
         }
 
         // If there is no selected participant, select one
         if (this.selected_participant_id === null) {
-            this.set_selected_participant(Object.keys(geoodle.participants)[0]);
+            this.set_selected_participant(Object.keys(this.participants)[0]);
             this.emit('notify', 'I selected a participant');
         }
 
@@ -78,6 +93,19 @@ class Geoodle {
     /**************************************\
     *                 MISC                 *
     \**************************************/
+
+    update(attr, value) {
+        // Check this can be updated
+        if (attr == 'id') throw new Error('You cnanot update ID!');
+
+        // Save updated attribute
+        this[attr] = value;
+        this.emit('update');
+    }
+
+    remove() {
+        // TODO
+    }
 
     toggle_add_mode() {
         if (this.add_mode != 'point') {
@@ -129,25 +157,26 @@ class Geoodle {
         };
     }
 
-    static deserialise(geoodle_list, input) {
+    deserialise(input) {
         console.log('Deserialise Geoodle');
 
-        let geoodle = new Geoodle(geoodle_list, input.id, input.name);
+        // Update my attributes
+        this._set_id(input.id);
+        this.update('name', input.name);
 
         // Deserialise the list of participants
         input.participants.forEach(function(sub_input) {
-            geoodle._add_participant(
-                Participant.deserialise(geoodle, sub_input)
-            );
-        });
+            let participant = this.add_participant(sub_input.id);
+            participant.deserialise(sub_input);
+        }.bind(this));
 
+        // Update extras
         if (input.selected_participant_id) {
             this.set_selected_participant(input.selected_participant_id);
         }
         if (input.add_mode) {
             this.set_add_mode(input.add_mode);
         }
-        return geoodle;
     }
 }
 

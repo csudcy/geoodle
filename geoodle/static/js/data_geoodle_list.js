@@ -1,6 +1,7 @@
 
 class GeoodleList {
     constructor() {
+        // Other stuff
         this.geoodles = {};
         this._selected_geoodle_id = null;
     }
@@ -9,23 +10,13 @@ class GeoodleList {
     *            SUB LIST MGMT             *
     \**************************************/
 
-    add_geoodle(id, name) {
-        // TODO
-        // Validate input (see participant)
-        if (id === null || id === undefined) {
-            // Find an id for this participant
-            id = 0;
-            while (this.geoodles[Geoodle.make_unique_id(id)] !== undefined) {
-                id++;
-            }
-        }
-        name = name || 'Hello, Geoodle!';
-
-        let geoodle = new Geoodle(this, id, name);
-        this._add_geoodle(geoodle);
+    id_exists(unique_id) {
+        return this.geoodles[unique_id] !== undefined;
     }
 
-    _add_geoodle(geoodle) {
+    add_geoodle(id, name) {
+        // Create it & add it to the list
+        let geoodle = new Geoodle(this, id, name);
         this.geoodles[geoodle.unique_id] = geoodle;
 
         // Catch events
@@ -34,6 +25,8 @@ class GeoodleList {
         });
 
         this.emit('add_geoodle', geoodle);
+
+        return geoodle;
     }
 
     set_selected_geoodle(unique_id) {
@@ -49,10 +42,10 @@ class GeoodleList {
         }
 
         // If there is no selected participant, select one
-        if (this.selected_participant_id === null) {
+        if (this._selected_geoodle_id === null) {
             let geoodle = Object.values(this.geoodles)[0];
-            this.set_selected_participant(geoodle.unique_id);
-            this.emit('notify', `I selected a Geoodle: "{geoodle.name}"`);
+            this.set_selected_geoodle(geoodle.unique_id);
+            this.emit('notify', `I selected a Geoodle: "${geoodle.name}"`);
         }
 
         return this.geoodles[this._selected_geoodle_id];
@@ -82,11 +75,11 @@ class GeoodleList {
 
         // Deserialise the list of Geoodle's
         input.geoodles.forEach(function(sub_input) {
-            this._add_geoodle(
-                Geoodle.deserialise(this, sub_input)
-            );
-        });
+            let geoodle = this.add_geoodle(sub_input.id);
+            geoodle.deserialise(sub_input);
+        }.bind(this));
 
+        // Update extras
         if (input.selected_geoodle_id) {
             this.set_selected_geoodle(input.selected_geoodle_id);
         }

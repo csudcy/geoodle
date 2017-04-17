@@ -9,45 +9,58 @@ const TRANSPORT_MODES = [
 
 class Participant {
     constructor(geoodle, id, name, color, transport_mode) {
+        // Save parent
         this.geoodle = geoodle;
 
-        this.id = id;
+        // Validate input
+        name = name || chance.first();
+        color = color || chance.color({format:'hex'});
+        transport_mode = transport_mode || 'walk';
+
+        // Save attributes
+        this._set_id(id);
         this.name = name;
         this.color = color;
         this.transport_mode = transport_mode;
-        this.markers = {};
 
-        this.unique_id = Participant.make_unique_id(geoodle, id);
+        // Other stuff
+        this.markers = {};
     }
 
-    static make_unique_id(geoodle, id) {
-        return `${geoodle.unique_id}_participant_${id}`;
+    _make_unique_id(id) {
+        return `${this.geoodle.unique_id}_participant_${id || this.id}`;
+    }
+
+    _set_id(id) {
+        // Check ID is not actually changing
+        if (this.id !== null && this.id !== undefined) {
+            if (this.id !== id) {
+                throw new Error(`You cannot change Participant ID from ${this.id} to ${id}!`);
+            }
+        }
+
+        if (id === null || id === undefined) {
+            // Find an id for this participant
+            id = 0;
+            while (this.geoodle.id_exists(this._make_unique_id(id))) {
+                id++;
+            }
+        }
+        this.id = id;
+        this.unique_id = this._make_unique_id();
     }
 
     /**************************************\
     *            SUB LIST MGMT             *
     \**************************************/
 
-    add_marker(id, type, lat, lng, label) {
-        // TODO
-        // Validate input (see participant)
-        if (id === null || id === undefined) {
-            // Find an id for this participant
-            id = 0;
-            while (this.markers[Marker.make_unique_id(this, id)] !== undefined) {
-                id++;
-            }
-        }
-        type = type || 'point';
-        lat = lat || 0;
-        lng = lng || 0;
-        label = label || 'No label';
-
-        let marker = new Marker(this, id, type, lat, lng, label);
-        this._add_marker(marker);
+    id_exists(unique_id) {
+        return this.markers[unique_id] !== undefined;
     }
 
-    _add_marker(marker) {
+    add_marker(id, type, lat, lng, label) {
+        // Create it & add it to the list
+        let marker = new Marker(this, id, type, lat, lng, label);
         this.markers[marker.unique_id] = marker;
 
         // Catch events
@@ -56,6 +69,8 @@ class Participant {
         });
 
         this.emit('add_marker', marker);
+
+        return marker;
     }
 
     /**************************************\
@@ -63,7 +78,10 @@ class Participant {
     \**************************************/
 
     update(attr, value) {
-        // TODO
+        // Check this can be updated
+        if (attr == 'id') throw new Error('You cnanot update ID!');
+
+        // Save updated attribute
         this[attr] = value;
         this.emit('update');
     }
@@ -115,24 +133,20 @@ class Participant {
         };
     }
 
-    static deserialise(geoodle, input) {
+    deserialise(input) {
         console.log('Deserialise Participant');
 
-        let participant = new Participant(
-            geoodle,
-            input.id,
-            input.name,
-            input.color,
-            input.transport_mode);
+        // Update my attributes
+        this._set_id(input.id);
+        this.update('name', input.name);
+        this.update('color', input.color);
+        this.update('transport_mode', input.transport_mode);
 
         // Deserialise the list of markers
         input.markers.forEach(function(sub_input) {
-            participant._add_marker(
-                Marker.deserialise(participant, sub_input)
-            );
-        });
-
-        return participant;
+            let marker = this.add_marker(sub_input.id);
+            marker.deserialise(sub_input);
+        }.bind(this));
     }
 }
 
