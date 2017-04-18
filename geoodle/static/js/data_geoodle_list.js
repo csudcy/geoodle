@@ -21,30 +21,44 @@ class GeoodleList {
 
         // Catch events
         geoodle.on('remove', function() {
+            // Remove the geoodle from my list of geoodles
             delete this.geoodles[geoodle.unique_id];
-        });
+
+            // Unset selected geoodle if necessary
+            if (this._selected_geoodle_id === geoodle.unique_id) {
+                this._set_selected_geoodle(null);
+            }
+        }.bind(this));
+
+        geoodle.on('select', function() {
+            this._set_selected_geoodle(geoodle.unique_id);
+        }.bind(this));
 
         this.emit('add_geoodle', geoodle);
 
         return geoodle;
     }
 
-    set_selected_geoodle(unique_id) {
+    _set_selected_geoodle(unique_id) {
         this._selected_geoodle_id = unique_id;
         this.emit('set_selected_geoodle', this.geoodles[unique_id]);
     }
 
-    get_selected_geoodle() {
+    get_selected_geoodle(auto_add_and_select) {
         // If there are no geoodles, add one
         if (!Object.keys(this.geoodles)) {
+            if (auto_add_and_select === false) return;
+
             let geoodle = this.add_geoodle();
             this.emit('notify', `I added a Geoodle: "${geoodle.name}"`);
         }
 
         // If there is no selected geoodle, select one
         if (this._selected_geoodle_id === null || this._selected_geoodle_id === undefined) {
+            if (auto_add_and_select === false) return;
+
             let geoodle = Object.values(this.geoodles)[0];
-            this.set_selected_geoodle(geoodle.unique_id);
+            this._set_selected_geoodle(geoodle.unique_id);
             this.emit('notify', `I selected a Geoodle: "${geoodle.name}"`);
         }
 
@@ -81,7 +95,7 @@ class GeoodleList {
 
         // Update extras
         if (input.selected_geoodle_id) {
-            this.set_selected_geoodle(input.selected_geoodle_id);
+            this._set_selected_geoodle(input.selected_geoodle_id);
         }
     }
 

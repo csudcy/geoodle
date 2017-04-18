@@ -57,6 +57,7 @@ Cool things which inspired me or I'm making use of in this project (in no partic
   * Import/Export Geoodles
   * Show/Hide participants
   * Duplicate Geoodle
+  * BUG: Hover window flickers while dragging
 * Serverside version
   * Login (by name to start with, by social login later)
   * Create a Geoodle

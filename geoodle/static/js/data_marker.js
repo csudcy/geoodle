@@ -19,7 +19,10 @@ class Marker {
     }
 
     _make_unique_id(id) {
-        return `${this.participant.unique_id}_marker_${id || this.id}`;
+        if (id === null || id === undefined) {
+            id = this.id;
+        }
+        return `${this.participant.unique_id}_marker_${id}`;
     }
 
     _set_id(id) {
@@ -55,7 +58,8 @@ class Marker {
     }
 
     remove() {
-        this.participant.remove_marker(this);
+        // Nothing for me to do...
+
         this.emit('remove');
     }
 

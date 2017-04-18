@@ -28,7 +28,10 @@ class Participant {
     }
 
     _make_unique_id(id) {
-        return `${this.geoodle.unique_id}_participant_${id || this.id}`;
+        if (id === null || id === undefined) {
+            id = this.id;
+        }
+        return `${this.geoodle.unique_id}_participant_${id}`;
     }
 
     _set_id(id) {
@@ -65,8 +68,9 @@ class Participant {
 
         // Catch events
         marker.on('remove', function() {
+            // Remove the marker from my list of markers
             delete this.markers[marker.unique_id];
-        });
+        }.bind(this));
 
         this.emit('add_marker', marker);
 
@@ -76,6 +80,10 @@ class Participant {
     /**************************************\
     *                 MISC                 *
     \**************************************/
+
+    select() {
+        this.emit('select');
+    }
 
     update(attr, value) {
         // Check this can be updated
@@ -87,24 +95,10 @@ class Participant {
     }
 
     remove() {
-        // TODO
-        // let geoodle = this.get_selected_geoodle();
-
-        // // Remove the participant
-        // delete geoodle.participants[id];
-
-        // // Remove the participants markers
-        // geoodle.markers.filter(
-        //     marker_info => marker_info.owner == id
-        // ).forEach(
-        //     marker_info => this._remove_marker(marker_info)
-        // );
-        // this.update_center_marker();
-
-        // // Unset selected participant if necessary
-        // if (this.selected_participant_id === id) {
-        //     this.set_selected_participant(null);
-        // }
+        // Remove all my markers
+        Object.values(this.markers).forEach(
+            marker => marker.remove()
+        );
 
         this.emit('remove');
     }
@@ -112,9 +106,7 @@ class Participant {
     toggle_transport_mode() {
         let index = TRANSPORT_MODES.indexOf(this.transport_mode);
         index = (index + 1) % TRANSPORT_MODES.length;
-        this.update_participant(id, 'transport_mode', TRANSPORT_MODES[index]);
-
-        this.emit('update');
+        this.update('transport_mode', TRANSPORT_MODES[index]);
     }
 
     /**************************************\

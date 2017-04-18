@@ -18,7 +18,10 @@ class Geoodle {
     }
 
     _make_unique_id(id) {
-        return `geoodle_${id || this.id}`;
+        if (id === null || id === undefined) {
+            id = this.id;
+        }
+        return `geoodle_${id}`;
     }
 
     _set_id(id) {
@@ -61,30 +64,44 @@ class Geoodle {
 
         // Catch events
         participant.on('remove', function() {
+            // Remove the participant from my list of participants
             delete this.participants[participant.unique_id];
-        });
+
+            // Unset selected participant if necessary
+            if (this._selected_participant_id === participant.unique_id) {
+                this._set_selected_participant(null);
+            }
+        }.bind(this));
+
+        participant.on('select', function() {
+            this._set_selected_participant(participant.unique_id);
+        }.bind(this));
 
         this.emit('add_participant', participant);
 
         return participant;
     }
 
-    set_selected_participant(unique_id) {
+    _set_selected_participant(unique_id) {
         this._selected_participant_id = unique_id;
         this.emit('set_selected_participant', this.participants[unique_id]);
     }
 
-    get_selected_participant() {
+    get_selected_participant(auto_add_and_select) {
         // If there are no participants, add one
         if (Object.keys(this.participants).length === 0) {
+            if (auto_add_and_select === false) return;
+
             let participant = this.add_participant();
-            this.emit('notify', 'I added a participant: "${participant.name}"');
+            this.emit('notify', `I added a participant: "${participant.name}"`);
         }
 
         // If there is no selected participant, select one
         if (this._selected_participant_id === null || this._selected_participant_id === undefined) {
+            if (auto_add_and_select === false) return;
+            
             let participant = Object.values(this.participants)[0];
-            this.set_selected_participant(participant.unique_id);
+            this._set_selected_participant(participant.unique_id);
             this.emit('notify', `I selected a participant: "${participant.name}"`);
         }
 
@@ -94,6 +111,10 @@ class Geoodle {
     /**************************************\
     *                 MISC                 *
     \**************************************/
+
+    select() {
+        this.emit('select');
+    }
 
     update(attr, value) {
         // Check this can be updated
@@ -105,7 +126,12 @@ class Geoodle {
     }
 
     remove() {
-        // TODO
+        // Remove all my participants
+        Object.values(this.participants).forEach(
+            participant => participant.remove()
+        );
+
+        this.emit('remove');
     }
 
     toggle_add_mode() {
@@ -122,8 +148,8 @@ class Geoodle {
             lng = 0,
             point_count = 0;
 
-        this.participants.forEach(function(participant) {
-            participant.markers.forEach(function(marker) {
+        Object.values(this.participants).forEach(function(participant) {
+            Object.values(participant.markers).forEach(function(marker) {
                 if (marker.type == 'point') {
                     lat += marker.lat;
                     lng += marker.lng;
@@ -173,7 +199,7 @@ class Geoodle {
 
         // Update extras
         if (input.selected_participant_id) {
-            this.set_selected_participant(input.selected_participant_id);
+            this._set_selected_participant(input.selected_participant_id);
         }
         if (input.add_mode) {
             this.set_add_mode(input.add_mode);
