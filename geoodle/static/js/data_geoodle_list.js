@@ -111,6 +111,13 @@ class GeoodleList {
 
             input.markers.forEach(function(marker_info, index) {
                 marker_info.id = index;
+                marker_info.position = {
+                    lat: marker_info.lat,
+                    lng: marker_info.lng
+                };
+                delete marker_info.lat;
+                delete marker_info.lng;
+
                 participants_dict[marker_info.owner].markers.push(marker_info);
             });
 

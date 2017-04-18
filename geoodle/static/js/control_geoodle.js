@@ -632,10 +632,7 @@ class GeoodleControl {
                     fillOpacity: 1,
                     anchor: {x: 12, y: 12}
                 },
-                position: {
-                    lat: geoodle_marker.lat,
-                    lng: geoodle_marker.lng
-                },
+                position: geoodle_marker.position,
                 map: this.map,
                 draggable: true
             });
@@ -648,16 +645,20 @@ class GeoodleControl {
             gmaps_marker.addListener('drag', function() {
                 // TODO: Make this update centre while dragging
                 // let latLng = gmaps_marker.getPosition();
-                // geoodle_marker.update('lat', latLng.lat());
-                // geoodle_marker.update('lng', latLng.lng());
+                // geoodle_marker.update('position', {
+                //     lat: latLng.lat(),
+                //     lng: latLng.lng(),
+                // });
 
                 // this.update_center_marker();
             }.bind(this));
             gmaps_marker.addListener('dragend', function() {
                 // TODO
                 let latLng = gmaps_marker.getPosition();
-                geoodle_marker.update('lat', latLng.lat());
-                geoodle_marker.update('lng', latLng.lng());
+                geoodle_marker.update('position', {
+                    lat: latLng.lat(),
+                    lng: latLng.lng(),
+                });
 
                 this.update_center_marker();
 
@@ -701,10 +702,7 @@ class GeoodleControl {
             });
 
             // TODO: This fucks up dragging
-            gmaps_marker.setPosition({
-                lat: geoodle_marker.lat,
-                lng: geoodle_marker.lng
-            });
+            gmaps_marker.setPosition(geoodle_marker.position);
 
             // TODO
             let visible = true;
@@ -954,58 +952,110 @@ class GeoodleControl {
     \**************************************/
 
     show_transport_times() {
+        let transport_info_dict = this._get_transport_info_dict();
+        if (this._validate_transport_info_dict(transport_info_dict)) {
+            this._get_distance_matrices(
+                transport_info_dict,
+                function(participant_distances) {
+                    let HTML = this._get_transport_times_html(
+                        transport_info_dict,
+                        participant_distances
+                    );
+                    this._show_transport_times(HTML);
+                }.bind(this));
+        }
+    }
+
+    _get_transport_info_dict() {
         let geoodle = this.get_selected_geoodle();
 
-        let participant_distances = {};
-
         // Destinations are the same for everyone
-        let destinations = geoodle.markers.filter(
-            marker_info => marker_info.type === 'suggestion'
-        ).map(
-            marker_info => marker_info.marker.getPosition()
-        );
+        let destination_positions = [];
+        let destination_markers = [];
+
+        // Sources are per-participant
+        let participant_infos = [];
+
+        Object.values(geoodle.participants).forEach(function(participant) {
+            let origin_positions = [];
+            let origin_markers = [];
+
+            Object.values(participant.markers).forEach(function(geoodle_marker) {
+                if (geoodle_marker.type === 'suggestion') {
+                    destination_positions.push(geoodle_marker.position);
+                    destination_markers.push(geoodle_marker);
+                } else {
+                    origin_positions.push(geoodle_marker.position);
+                    origin_markers.push(geoodle_marker);
+                }
+            });
+
+            // Add the participant to the list if they have origins
+            if (origin_positions.length > 0) {
+                participant_infos.push({
+                    participant: participant,
+                    origin_positions: origin_positions,
+                    origin_markers: origin_markers
+                });
+            }
+        });
+
+        return {
+            destination_positions: destination_positions,
+            destination_markers: destination_markers,
+            participant_infos: participant_infos,
+        };
+    }
+
+    _validate_transport_info_dict(transport_info_dict) {
+        // Check for errors
+        let valid = true;
+        if (transport_info_dict.participant_infos.length === 0) {
+            noty({text: 'You must add some points before you can get travel times!'});
+            valid = false;
+        }
+        if (transport_info_dict.destination_positions.length === 0) {
+            noty({text: 'You must add some suggestions before you can get travel times!'});
+            valid = false;
+        }
+        return valid;
+    }
+
+    _get_distance_matrices(transport_info_dict, final_callback) {
         let dms = new google.maps.DistanceMatrixService();
 
-        Object.keys(geoodle.participants).forEach(function(participant_id) {
-            let origins = geoodle.markers.filter(
-                marker_info => marker_info.owner === participant_id && marker_info.type === 'point'
-            ).map(
-                marker_info => marker_info.marker.getPosition()
-            );
-
+        transport_info_dict.participant_infos.forEach(function(participant_info) {
             dms.getDistanceMatrix({
-                    origins: origins,
-                    destinations: destinations,
+                    origins: participant_info.origin_positions,
+                    destinations: transport_info_dict.destination_positions,
                     travelMode: google.maps.TravelMode[
                         TRANSPORT_MODE_MAP[
-                            geoodle.participants[participant_id].transport_mode
+                            participant_info.participant.transport_mode
                         ]
                     ]
                 },
-                dms_callback.bind(this, participant_id));
+                dms_callback.bind(this, participant_info.participant.unique_id));
         }.bind(this));
 
-        function dms_callback(participant_id, response, status) {
+        let participant_distances = {};
+        function dms_callback(participant_unique_id, response, status) {
             if (status !== 'OK') {
-                console.log(participant_id, response, status);
+                console.log(participant_unique_id, response, status);
                 alert('DMS failed!');
                 return;
             }
 
             // Add results to participant_distances
-            participant_distances[participant_id] = response.rows;
+            participant_distances[participant_unique_id] = response.rows;
 
             // Check if participant_distances is complete
-            if (Object.keys(participant_distances).length == Object.keys(geoodle.participants).length) {
-                let HTML = this._get_transport_times_html(participant_distances);
-                this._show_transport_times(HTML);
+            if (Object.keys(participant_distances).length == transport_info_dict.participant_infos.length) {
+                final_callback(participant_distances);
             }
         }
     }
 
-    _get_transport_times_html(participant_distances) {
-        let geoodle = this.get_selected_geoodle();
-
+    _get_transport_times_html(transport_info_dict, participant_distances) {
         let HTML = `
             <table border="1" style="
                     margin: auto;
@@ -1015,38 +1065,28 @@ class GeoodleControl {
                     <th colspan="2"></th>
         `;
 
-        // Destinations are the same for everyone
-        let destinations = geoodle.markers.filter(
-            marker_info => marker_info.type === 'suggestion'
-        );
-
         // Constuct destination headers
-        destinations.forEach(
-            marker_info => HTML += `
-                <th style="background-color: ${geoodle.participants[marker_info.owner].color};">
-                    ${marker_info.label || '??'}
+        transport_info_dict.destination_markers.forEach(
+            geoodle_marker => HTML += `
+                <th style="background-color: ${geoodle_marker.participant.color};">
+                    ${geoodle_marker.label || '??'}
                 </th>`
         );
 
         HTML += '</thead><tbody>';
 
         // Construct participant rows
-        Object.keys(geoodle.participants).forEach(function(participant_id) {
-            let participant = geoodle.participants[participant_id];
-            let origins = geoodle.markers.filter(
-                marker_info => marker_info.owner === participant_id && marker_info.type === 'point'
-            );
-
+        transport_info_dict.participant_infos.forEach(function(participant_info) {
             // Add participant header
             HTML += `
                 <tr>
-                    <td rowspan="${origins.length}" style="
-                        background-color: ${participant.color};
+                    <td rowspan="${participant_info.origin_markers.length}" style="
+                        background-color: ${participant_info.participant.color};
                         ">
-                        ${participant.name || '??'}
+                        ${participant_info.participant.name || '??'}
                         <br/>
                         <span title="Participant transport mode" style="
-                            background: url(${ICON_URLS['directions_'+participant.transport_mode]})
+                            background: url(${ICON_URLS['directions_'+participant_info.participant.transport_mode]})
                                 no-repeat center;
                             background-color: lightgrey;
                             background-size: 16px;
@@ -1057,20 +1097,19 @@ class GeoodleControl {
                             display: inline-block;
                         ">
                         </span>
-
                     </td>`;
 
             // Construct origin rows
-            origins.forEach(function(origin_marker_info, origin_index) {
+            participant_info.origin_markers.forEach(function(source_geoodle_marker, origin_index) {
                 // Add origin header
                 HTML += `
                     <td>
-                        ${origin_marker_info.label || '??'}
+                        ${source_geoodle_marker.label || '??'}
                     </td>`;
 
                 // Construct destination rows
-                destinations.forEach(function(destination_marker_info, destination_index) {
-                    let result = participant_distances[participant_id][origin_index].elements[destination_index];
+                transport_info_dict.destination_markers.forEach(function(destination_geoodle_marker, destination_index) {
+                    let result = participant_distances[participant_info.participant.unique_id][origin_index].elements[destination_index];
                     // Add destination cell
                     HTML += `
                         <td style="text-align: right;">
@@ -1084,7 +1123,6 @@ class GeoodleControl {
             });
             // HAX
             HTML += '</tr>';
-
         }.bind(this));
 
         HTML += '</tbody></table>';

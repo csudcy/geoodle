@@ -99,7 +99,7 @@ class Geoodle {
         // If there is no selected participant, select one
         if (this._selected_participant_id === null || this._selected_participant_id === undefined) {
             if (auto_add_and_select === false) return;
-            
+
             let participant = Object.values(this.participants)[0];
             this._set_selected_participant(participant.unique_id);
             this.emit('notify', `I selected a participant: "${participant.name}"`);
@@ -151,8 +151,8 @@ class Geoodle {
         Object.values(this.participants).forEach(function(participant) {
             Object.values(participant.markers).forEach(function(marker) {
                 if (marker.type == 'point') {
-                    lat += marker.lat;
-                    lng += marker.lng;
+                    lat += marker.position.lat;
+                    lng += marker.position.lng;
                     point_count++;
                 }
             });

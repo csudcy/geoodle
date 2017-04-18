@@ -13,8 +13,10 @@ class Marker {
         // Save attributes
         this._set_id(id);
         this.type = type;
-        this.lat = lat;
-        this.lng = lng;
+        this.position = {
+            lat: lat,
+            lng: lng
+        };
         this.label = label;
     }
 
@@ -68,10 +70,10 @@ class Marker {
     \**************************************/
 
     serialise() {
-        return         {
+        return {
+            id: this.id,
             type: this.type,
-            lat: this.lat,
-            lng: this.lng,
+            position: this.position,
             label: this.label
         };
     }
@@ -82,8 +84,7 @@ class Marker {
         // Update my attributes
         this._set_id(input.id);
         this.update('type', input.type);
-        this.update('lat', input.lat);
-        this.update('lng', input.lng);
+        this.update('position', input.position);
         this.update('label', input.label);
     }
 }
