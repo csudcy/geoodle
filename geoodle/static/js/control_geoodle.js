@@ -411,10 +411,6 @@ class GeoodleControl {
         this.infowindow_controls.delete_marker.click(function() {
             // Remove the marker
             this.infowindow_geoodle_marker.remove();
-
-            // Update everything else
-            this.update_center_marker();
-            this.emit('update');
         }.bind(this));
 
         this.infowindow_controls.icon.click(function() {
@@ -428,10 +424,10 @@ class GeoodleControl {
 
         this.infowindow_controls.description_input.on('change', function() {
             // Save the new description
-            this.infowindow_geoodle_marker.label = this.infowindow_controls.description_input.val();
-
-            // Update everything else
-            this.emit('update');
+            this.infowindow_geoodle_marker.update(
+                'label',
+                this.infowindow_controls.description_input.val()
+            );
         }.bind(this));
     }
 
@@ -497,13 +493,10 @@ class GeoodleControl {
             // Update UI
             // TODO
 
-
             // Add listeners
             this.init_geoodle_listeners(geoodle);
 
-
             // Let listeners know what's going on
-            // TODO?
             this.emit('update');
         }.bind(this));
     }
@@ -529,14 +522,10 @@ class GeoodleControl {
             participant_element.data('participant', geoodle_participant);
             this.controls.participant_list.append(participant_element);
 
-
             // Add listeners
             this.init_geoodleparticipant_listeners(geoodle_participant);
 
-
             // Let listeners know what's going on
-            // TODO?
-            // this.emit('add_participant', this.participants[id]);
             this.emit('update');
         }.bind(this));
 
@@ -566,7 +555,6 @@ class GeoodleControl {
             // }.bind(this));
 
             // Let listeners know what's going on
-            // this.emit('set_selected_participant', id);
             this.emit('update');
         }.bind(this));
 
@@ -606,8 +594,6 @@ class GeoodleControl {
             );
 
             // Let listeners know what's going on
-            // TODO?
-            // this.emit('update_participant', geoodle.participants[id]);
             this.emit('update');
         }.bind(this));
 
@@ -618,8 +604,6 @@ class GeoodleControl {
             ).remove();
 
             // Let listeners know what's going on
-            // TODO?
-            // this.emit('remove_participant', id);
             this.emit('update');
         }.bind(this));
 
@@ -661,8 +645,6 @@ class GeoodleControl {
                 });
 
                 this.update_center_marker();
-
-                // this.emit('update');
             }.bind(this));
 
             gmaps_marker.addListener('mouseover', function() {
@@ -680,7 +662,6 @@ class GeoodleControl {
             this.update_center_marker();
 
             // Let listeners know what's going on
-            // TODO?
             this.emit('update');
         }.bind(this));
     }
@@ -701,7 +682,6 @@ class GeoodleControl {
                 anchor: gmaps_marker.icon.anchor
             });
 
-            // TODO: This fucks up dragging
             gmaps_marker.setPosition(geoodle_marker.position);
 
             // TODO
@@ -929,8 +909,6 @@ class GeoodleControl {
             </div>`;
     }
 
-
-    // TODO?
     update_selected_participant_color() {
         // Get the selected participant but don't add anything!
         let geoodle_participant;
@@ -1209,7 +1187,6 @@ class GeoodleControl {
     //     );
 
     //     // Let listeners know what's going on
-    //     this.emit('add_participant', geoodle.participants[id]);
     //     this.emit('update');
     // }
 
@@ -1233,7 +1210,6 @@ class GeoodleControl {
     //     );
 
     //     // Let listeners know what's going on
-    //     this.emit('update_participant', geoodle.participants[id]);
     //     this.emit('update');
     // }
 
@@ -1260,7 +1236,6 @@ class GeoodleControl {
     //     this.controls.participant_list.find(`[participant_id=${id}]`).remove();
 
     //     // Let listeners know what's going on
-    //     this.emit('remove_participant', id);
     //     this.emit('update');
     // }
 
@@ -1283,7 +1258,6 @@ class GeoodleControl {
     //     // }.bind(this));
 
     //     // Let listeners know what's going on
-    //     this.emit('set_selected_participant', id);
     //     this.emit('update');
     // }
 
