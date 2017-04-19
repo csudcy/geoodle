@@ -23,6 +23,9 @@ class Participant {
         this.color = color;
         this.transport_mode = transport_mode;
 
+        // Copy some attibutes from my parent (so they can be used to propagate updates later)
+        this.visible = geoodle.visible;
+
         // Other stuff
         this.markers = {};
     }
@@ -87,11 +90,18 @@ class Participant {
 
     update(attr, value) {
         // Check this can be updated
-        if (attr == 'id') throw new Error('You cnanot update ID!');
+        if (attr == 'id') throw new Error('You cannot update ID!');
 
         // Save updated attribute
         this[attr] = value;
         this.emit('update');
+
+        // Propagate some changes to my children
+        if (attr == 'color' || attr == 'visible') {
+            Object.values(this.markers).forEach(
+                marker => marker.update(attr, value)
+            );
+        }
     }
 
     remove() {
@@ -126,8 +136,6 @@ class Participant {
     }
 
     deserialise(input) {
-        console.log('Deserialise Participant');
-
         // Update my attributes
         this._set_id(input.id);
         this.update('name', input.name);

@@ -41,6 +41,12 @@ class GeoodleList {
 
     _set_selected_geoodle(unique_id) {
         this._selected_geoodle_id = unique_id;
+
+        // Update goodle visibility
+        Object.values(this.geoodles).forEach(
+            geoodle => geoodle.update('visible', geoodle.unique_id == unique_id)
+        );
+
         this.emit('set_selected_geoodle', this.geoodles[unique_id]);
     }
 
@@ -83,8 +89,6 @@ class GeoodleList {
     }
 
     deserialise(input) {
-        console.log('Deserialise GeoodleList');
-
         input = this._convert_old_serialised_input(input);
 
         // Deserialise the list of Geoodle's

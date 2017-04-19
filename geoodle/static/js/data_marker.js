@@ -18,6 +18,10 @@ class Marker {
             lng: lng
         };
         this.label = label;
+
+        // Copy some attibutes from my parent (so they can be used to propagate updates later)
+        this.color = participant.color;
+        this.visible = participant.visible;
     }
 
     _make_unique_id(id) {
@@ -52,7 +56,7 @@ class Marker {
 
     update(attr, value) {
         // Check this can be updated
-        if (attr == 'id') throw new Error('You cnanot update ID!');
+        if (attr == 'id') throw new Error('You cannot update ID!');
 
         // Save updated attribute
         this[attr] = value;
@@ -79,8 +83,6 @@ class Marker {
     }
 
     deserialise(input) {
-        console.log('Deserialise Marker');
-
         // Update my attributes
         this._set_id(input.id);
         this.update('type', input.type);

@@ -15,6 +15,7 @@ class Geoodle {
         this._selected_participant_id = null;
         this.participants = {};
         this.add_mode = 'point';
+        this.visible = false;
     }
 
     _make_unique_id(id) {
@@ -118,11 +119,18 @@ class Geoodle {
 
     update(attr, value) {
         // Check this can be updated
-        if (attr == 'id') throw new Error('You cnanot update ID!');
+        if (attr == 'id') throw new Error('You cannot update ID!');
 
         // Save updated attribute
         this[attr] = value;
         this.emit('update');
+
+        // Propagate some changes to my children
+        if (attr == 'visible') {
+            Object.values(this.participants).forEach(
+                participant => participant.update(attr, value)
+            );
+        }
     }
 
     remove() {
@@ -185,8 +193,6 @@ class Geoodle {
     }
 
     deserialise(input) {
-        console.log('Deserialise Geoodle');
-
         // Update my attributes
         this._set_id(input.id);
         this.update('name', input.name);
