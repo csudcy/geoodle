@@ -5,7 +5,7 @@ class Geoodle {
         this.geoodle_list = geoodle_list;
 
         // Validate input
-        name = name || 'Hello, Geoodle!';
+        name = name || chance.city();
 
         // Save attributes
         this._set_id(id);

@@ -43,17 +43,21 @@ Cool things which inspired me or I'm making use of in this project (in no partic
     * ~~Show participant colour~~
     * ~~Show participant transport mode~~
     * ~~Show suggestion colour~~
-    * Sort participants, places & suggestions by name
+    * ~~Sort participants, places & suggestions by name~~
     * Show best & worst times
     * Show total best/worst times
     * Show max times
     * Show best max time
+  * Move Geoodle data to it's own class
+    * BUG: Moving markers doesn't emit an update
+    * BUG: Center marker doesn't move while dragging
+  * Allow multiple Geoodles
+    * BUG: Removing selected Geoodle errors
+    * Show Geoodle title somewhere?
+  * Move to localStorage
   * People can vote on which suggestions they like (or refuse to go to!)
   * Search for places
-  * Confirm clearing of places/suggestions
-  * Move to localStorage
-  * Allow multiple maps
-  * Move Geoodle data to it's own class?
+  * Confirm Geoodle/participant deletion
   * Import/Export Geoodles
   * Show/Hide participants
   * Duplicate Geoodle

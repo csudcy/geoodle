@@ -166,51 +166,60 @@ class GeoodleControl {
                 </span>
 
                 <span
-                    class="geoodle_container"
+                    class="list_container"
                     style="
                         float: left;
-                        text-align: center;
-                        display: none;
-                        border: 1px solid black;
-                        border-radius: 5px;
-                        padding: 2px;
-                        margin-left: 3px;
+                        max-width: 200px;
+                        height: 230px;
+                        overflow: auto;
                     ">
-                    Geoodles:
-                    <div class="geoodle_list">
-                    </div>
-                    <button
-                        style="
-                            width: 100%;
-                            margin-top: 5px;
-                        "
-                        class="add_geoodle">
-                        Add Geoodle
-                    </button>
-                </span>
 
-                <span
-                    class="participant_container"
-                    style="
-                        float: left;
-                        text-align: center;
-                        display: none;
-                        border: 1px solid black;
-                        border-radius: 5px;
-                        padding: 2px;
-                        margin-left: 3px;
-                    ">
-                    Participants:
-                    <div class="participant_list">
-                    </div>
-                    <button
+                    <div
+                        class="geoodle_container"
                         style="
-                            width: 100%;
-                            margin-top: 5px;
-                        "
-                        class="add_participant">
-                        Add Participant
-                    </button>
+                            text-align: center;
+                            display: none;
+                            border: 1px solid black;
+                            border-radius: 5px;
+                            padding: 2px;
+                            margin-left: 3px;
+                            margin-bottom: 3px;
+                        ">
+                        Geoodles:
+                        <div class="geoodle_list">
+                        </div>
+                        <button
+                            style="
+                                width: 100%;
+                                margin-top: 5px;
+                            "
+                            class="add_geoodle">
+                            Add Geoodle
+                        </button>
+                    </div>
+
+                    <div
+                        class="participant_container"
+                        style="
+                            text-align: center;
+                            display: none;
+                            border: 1px solid black;
+                            border-radius: 5px;
+                            padding: 2px;
+                            margin-left: 3px;
+                        ">
+                        Participants:
+                        <div class="participant_list">
+                        </div>
+                        <button
+                            style="
+                                width: 100%;
+                                margin-top: 5px;
+                            "
+                            class="add_participant">
+                            Add Participant
+                        </button>
+                    </div>
                 </span>
 
                 <div
@@ -564,7 +573,7 @@ class GeoodleControl {
         geoodle.on('update', function() {
             // Update UI
             let geoodle_element = this.controls.geoodle_list.find(`[geoodle_id=${geoodle.unique_id}]`);
-            geoodle_element.find('.participant_name').val(geoodle.name);
+            geoodle_element.find('.geoodle_name').val(geoodle.name);
 
             this.emit('update');
         }.bind(this));
@@ -872,7 +881,7 @@ class GeoodleControl {
                     type="text"
                     value="${geoodle.name}"
                     style="
-                        width: 90px;
+                        width: 120px;
                     "/>
 
                 <button

@@ -15,6 +15,7 @@ function initMap() {
 
     // Whenever there is an update on the map, update the URL hash
     geoodleControl.on('update', function() {
+        console.log('Update!');
         // TODO
         // window.location.hash = btoa(
         //     JSON.stringify(
