@@ -1157,6 +1157,7 @@ class GeoodleControl {
                     left: 0px;
                     right: 0px;
                     background-color: white;
+                    z-index: 10000;
                 ">
                 ${HTML}
             </div>
