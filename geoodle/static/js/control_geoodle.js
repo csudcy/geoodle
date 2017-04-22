@@ -263,7 +263,7 @@ class GeoodleControl {
         }.bind(this));
 
         this.controls.toggle_add_mode.click(function() {
-            this.get_selected_geoodle().toggle_add_mode();
+            this.geoodle_list.get_selected_geoodle().toggle_add_mode();
         }.bind(this));
 
         this.controls.show_transport_times.click(function() {
@@ -306,7 +306,7 @@ class GeoodleControl {
 
     init_participant_button_listeners() {
         this.controls.add_participant.click(function() {
-            this.get_selected_geoodle().add_participant();
+            this.geoodle_list.get_selected_geoodle().add_participant();
         }.bind(this));
 
         this.controls.participant_list.on('change', '[name="selected_participant"]', function(e) {
@@ -361,8 +361,9 @@ class GeoodleControl {
             }
 
             this.geocode(e.latLng, function(label) {
-                this.get_selected_geoodle().get_selected_participant().add_marker(
-                    null, this.get_add_mode(), e.latLng.lat(), e.latLng.lng(), label
+                let geoodle = this.geoodle_list.get_selected_geoodle();
+                geoodle.get_selected_participant().add_marker(
+                    null, geoodle.add_mode, e.latLng.lat(), e.latLng.lng(), label
                 );
             }.bind(this));
         }.bind(this));
@@ -528,7 +529,7 @@ class GeoodleControl {
     }
 
     /**************************************\
-    *        GEOODLE LIST LISTENERS        *
+    *            DATA LISTENERS            *
     \**************************************/
 
     init_geoodlelist_listeners() {
@@ -544,6 +545,9 @@ class GeoodleControl {
 
             // Add listeners
             this.init_geoodle_listeners(geoodle);
+
+            // Select the new Geoodle
+            geoodle.select();
 
             this.emit('update');
         }.bind(this));
@@ -561,6 +565,12 @@ class GeoodleControl {
                 this.controls.geoodle_list.find(
                     `[geoodle_id=${geoodle.unique_id}] input[type="radio"]`
                 ).prop('checked', true);
+
+                // HACK: Re-select selected participant so the radio button is checked
+                let participant = geoodle.get_selected_participant(false);
+                if (participant) {
+                    participant.select();
+                }
             }
         }.bind(this));
     }
@@ -605,7 +615,7 @@ class GeoodleControl {
 
             // Update selected input
             this.controls.participant_list.find(
-                `[geoodle_id=${geoodle_participant.geoodle.unique_id}][participant_id] input[type="radio"]`
+                `[participant_id] input[type="radio"]`
             ).prop('checked', false);
             if (geoodle_participant) {
                 this.controls.participant_list.find(
@@ -762,18 +772,6 @@ class GeoodleControl {
     }
 
     /**************************************\
-    *        GEOODLE LIST SHORTCUTS        *
-    \**************************************/
-
-    get_selected_geoodle() {
-        return this.geoodle_list.get_selected_geoodle();
-    }
-
-    get_add_mode() {
-        return this.geoodle_list.get_selected_geoodle().add_mode;
-    }
-
-    /**************************************\
     *              INFO WINDOW             *
     \**************************************/
 
@@ -809,6 +807,28 @@ class GeoodleControl {
         this.infowindow.close();
     }
 
+    /**************************************\
+    *             HOVER WINDOW             *
+    \**************************************/
+
+    show_hoverwindow(geoodle_marker) {
+        if (this.infowindow_geoodle_marker == geoodle_marker) {
+            // The infowindow is already open for this marker; don't do anything
+            return;
+        }
+
+        this._update_window_info(geoodle_marker, this.hoverwindow_controls);
+        this.hoverwindow.open(this.map, this.marker_lookup[geoodle_marker.unique_id]);
+    }
+
+    hide_hoverwindow() {
+        this.hoverwindow.close();
+    }
+
+    /**************************************\
+    *             SHARED WINDOW            *
+    \**************************************/
+
     _update_window_info(geoodle_marker, controls) {
         controls.icon.css(
             'background',
@@ -833,29 +853,11 @@ class GeoodleControl {
     }
 
     /**************************************\
-    *             HOVER WINDOW             *
-    \**************************************/
-
-    show_hoverwindow(geoodle_marker) {
-        if (this.infowindow_geoodle_marker == geoodle_marker) {
-            // The infowindow is already open for this marker; don't do anything
-            return;
-        }
-
-        this._update_window_info(geoodle_marker, this.hoverwindow_controls);
-        this.hoverwindow.open(this.map, this.marker_lookup[geoodle_marker.unique_id]);
-    }
-
-    hide_hoverwindow() {
-        this.hoverwindow.close();
-    }
-
-    /**************************************\
     *             CENTER MARKER            *
     \**************************************/
 
     update_center_marker() {
-        let center = this.get_selected_geoodle().get_center();
+        let center = this.geoodle_list.get_selected_geoodle().get_center();
         this.center_marker.setPosition(center || this.center);
     }
 
@@ -898,7 +900,6 @@ class GeoodleControl {
     _get_participant_html(geoodle_participant) {
         return `
             <div
-                geoodle_id="${geoodle_participant.geoodle.unique_id}"
                 participant_id="${geoodle_participant.unique_id}">
                 <input
                     type="radio"
@@ -985,7 +986,7 @@ class GeoodleControl {
     }
 
     _get_transport_info_dict() {
-        let geoodle = this.get_selected_geoodle();
+        let geoodle = this.geoodle_list.get_selected_geoodle();
 
         // Destinations are the same for everyone
         let destination_positions = [];

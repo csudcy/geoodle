@@ -60,8 +60,10 @@ Cool things which inspired me or I'm making use of in this project (in no partic
   * Confirm Geoodle/participant deletion
   * Import/Export Geoodles
   * Show/Hide participants
-  * Duplicate Geoodle
+  * Duplicate Geoodle?
+  * Duplicate participant?
   * BUG: Hover window flickers while dragging
+  * Move styles to CSS
 * Serverside version
   * Login (by name to start with, by social login later)
   * Create a Geoodle
