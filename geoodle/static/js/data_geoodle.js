@@ -142,12 +142,16 @@ class Geoodle {
         this.emit('remove');
     }
 
-    toggle_add_mode() {
+    toggle_add_mode(add_mode) {
         if (this.add_mode != 'point') {
-            this.add_mode = 'point';
+            this.set_add_mode('point');
         } else {
-            this.add_mode = 'suggestion';
+            this.set_add_mode('suggestion');
         }
+    }
+
+    set_add_mode(add_mode) {
+        this.add_mode = add_mode;
         this.emit('set_add_mode', this.add_mode);
     }
 

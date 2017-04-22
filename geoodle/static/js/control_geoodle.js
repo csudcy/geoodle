@@ -566,12 +566,6 @@ class GeoodleControl {
                 this.controls.geoodle_list.find(
                     `[geoodle_id=${geoodle.unique_id}] input[type="radio"]`
                 ).prop('checked', true);
-
-                // HACK: Re-select selected participant so the radio button is checked
-                let participant = geoodle.get_selected_participant(false);
-                if (participant) {
-                    participant.select();
-                }
             }
 
             // HACK: Re-select selected participant so the radio button is checked
@@ -580,6 +574,11 @@ class GeoodleControl {
                 if (participant) {
                     participant.select();
                 }
+            }
+
+            // HACK: Re-set add_mode so the icon is correct
+            if (geoodle) {
+                geoodle.set_add_mode(geoodle.add_mode);
             }
 
             // Emit update_title so it can be displayed nicely
@@ -1227,6 +1226,10 @@ class GeoodleControl {
 
                 callback(label);
             });
+    }
+
+    serialise() {
+        return this.geoodle_list.serialise();
     }
 
     deserialise(input) {

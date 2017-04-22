@@ -24,12 +24,11 @@ function initMap() {
     // Whenever there is an update on the map, update the URL hash
     geoodleControl.on('update', function() {
         console.log('Update!');
-        // TODO
-        // window.location.hash = btoa(
-        //     JSON.stringify(
-        //         geoodleControl.serialise()
-        //     )
-        // );
+        window.location.hash = btoa(
+            JSON.stringify(
+                geoodleControl.serialise()
+            )
+        );
     });
 
     // If there is a URL hash, use it!
