@@ -253,7 +253,7 @@ class GeoodleControl {
             participant.update('color', target.val());
         }.bind(this))
 
-        this.controls.participant_list.on('change', '.participant_name', function(e) {
+        this.controls.participant_list.on('change', '.participant_name_input', function(e) {
             let target = $(e.target);
             let participant = target.parent().data('participant');
             participant.update('name', target.val());
@@ -539,7 +539,7 @@ class GeoodleControl {
 
             let participant_element = this.controls.participant_list.find(`[participant_id=${geoodle_participant.unique_id}]`);
             participant_element.find('.participant_color').val(geoodle_participant.color);
-            participant_element.find('.participant_name').val(geoodle_participant.name);
+            participant_element.find('.participant_name_input').val(geoodle_participant.name);
             participant_element.find('.participant_transport').css(
                 'background-image',
                 `url(${ICON_URLS['directions_'+geoodle_participant.transport_mode]})`
@@ -812,7 +812,7 @@ class GeoodleControl {
                     type="color"
                     value="${geoodle_participant.color}"/>
                 <input
-                    class="participant_name"
+                    class="participant_name_input"
                     title="Enter participants name"
                     placeholder="Participant name"
                     type="text"
