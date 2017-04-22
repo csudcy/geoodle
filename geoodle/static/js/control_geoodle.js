@@ -109,27 +109,11 @@ class GeoodleControl {
     }
 
     _get_button_html(klass, text, icon) {
-        let ICON_WH = 24,
-            ICON_PADDING = 5;
         return `
-            <button title="${text}" style="
-                    background: url(${icon})
-                        no-repeat;
-                    background-position-y: center;
-                    background-position-x: 5px;
-                    background-color: lightgrey;
-                    background-size: ${ICON_WH}px;
-                    padding-left: ${ICON_WH + ICON_PADDING}px;
-                    min-width: ${ICON_WH + 2 * ICON_PADDING}px;
-                    width: 100%;
-                    height: ${ICON_WH + 2 * ICON_PADDING}px;
-                    border: none;
-                    border-radius: ${ICON_PADDING}px;
-                    margin-bottom: 5px;
-                    display: block;
-                 "
-                class="${klass}">
-                <span class="control_label" style="display: none;">
+            <button title="${text}"
+                style="background-image: url(${icon});"
+                class="control_button ${klass}">
+                <span class="control_label">
                     ${text}
                 </span>
             </button>
@@ -148,85 +132,32 @@ class GeoodleControl {
             );
         }.bind(this));
         controlDiv.html(`
-            <div
-                class="container"
-                style="
-                    background-color: white;
-                    border: 2px solid rgb(255, 255, 255);
-                    border-radius: 3px;
-                    box-shadow: rgba(0, 0, 0, 0.298039) 0px 2px 6px;
-                    text-align: center;
-                ">
-                <span
-                    class="button_container"
-                    style="
-                        float: left;
-                        margin-bottom: -5px;
-                    ">
+            <div class="container">
+                <span class="button_container">
                     ${BUTTON_HTML}
                 </span>
 
-                <span
-                    class="list_container"
-                    style="
-                        float: left;
-                        max-width: 200px;
-                        height: 230px;
-                        overflow: auto;
-                    ">
-
-                    <div
-                        class="geoodle_container"
-                        style="
-                            text-align: center;
-                            display: none;
-                            border: 1px solid black;
-                            border-radius: 5px;
-                            padding: 2px;
-                            margin-left: 3px;
-                            margin-bottom: 3px;
-                        ">
+                <span class="list_container">
+                    <div class="geoodle_container">
                         Geoodles:
                         <div class="geoodle_list">
                         </div>
-                        <button
-                            style="
-                                width: 100%;
-                                margin-top: 5px;
-                            "
-                            class="add_geoodle">
+                        <button class="add_geoodle">
                             Add Geoodle
                         </button>
                     </div>
 
-                    <div
-                        class="participant_container"
-                        style="
-                            text-align: center;
-                            display: none;
-                            border: 1px solid black;
-                            border-radius: 5px;
-                            padding: 2px;
-                            margin-left: 3px;
-                        ">
+                    <div class="participant_container">
                         Participants:
                         <div class="participant_list">
                         </div>
-                        <button
-                            style="
-                                width: 100%;
-                                margin-top: 5px;
-                            "
-                            class="add_participant">
+                        <button class="add_participant">
                             Add Participant
                         </button>
                     </div>
                 </span>
 
-                <div
-                    style="
-                        clear: both;
-                    ">
+                <div style="clear: both;">
                 </div>
             </div>`);
 
@@ -383,55 +314,19 @@ class GeoodleControl {
         let html = `
             <div class="info_popup">
                 <div class="top_row">
-                    <span class="owner_container">
-                        <span
-                            class="icon"
-                            style="
-                                display: inline-block;
-                                // background: SET LATER;
-                                // background-color: SET LATER;
-                                width: 24px;
-                                height: 24px;
-                                border-radius: 5px;
-                                cursor: pointer;
-                            ">
+                    <span>
+                        <span class="participant_icon">
                         </span>
-                        <span
-                            class="name"
-                            style="
-                                font-weight: bold;
-                                padding: 5px;
-                                vertical-align: super;
-                            ">
-                            SET LATER
+                        <span class="participant_name">
                         </span>
                     </span>
-                    <span
-                        class="delete_marker"
-                        style="
-                            display: inline-block;
-                            background:
-                                url(${ICON_URLS.delete})
-                                no-repeat
-                                center;
-                            background-color: lightgrey;
-                            width: 24px;
-                            height: 24px;
-                            border-radius: 5px;
-                            cursor: pointer;
-                            float: right;
-                        ">
+                    <span class="delete_marker">
                     </span>
                 </div>
-                <span class="description_container">
-                    <input
-                        type="textbox"
-                        class="description"
-                        placeholder="Description"
-                        value="SET LATER"
-                        style="
-                            width: 175px;
-                        "/>
+                <span>
+                    <input class="participant_description"
+                        type="text"
+                        placeholder="Description"/>
                 </span>
             </div>
         `;
@@ -449,9 +344,9 @@ class GeoodleControl {
 
         // Find the controls
         this.infowindow_controls = {
-            icon: infowindow_div.find('.owner_container .icon'),
-            name: infowindow_div.find('.owner_container .name'),
-            description_input: infowindow_div.find('.description_container .description'),
+            icon: infowindow_div.find('.participant_icon'),
+            name: infowindow_div.find('.participant_name'),
+            description_input: infowindow_div.find('.participant_description'),
             delete_marker: infowindow_div.find('.delete_marker'),
         };
     }
@@ -484,27 +379,10 @@ class GeoodleControl {
         let html = `
             <div class="info_popup">
                 <div class="top_row">
-                    <span class="owner_container">
-                        <span
-                            class="icon"
-                            style="
-                                display: inline-block;
-                                // background: SET LATER;
-                                // background-color: SET LATER;
-                                width: 24px;
-                                height: 24px;
-                                border-radius: 5px;
-                                cursor: pointer;
-                            ">
+                    <span class="">
+                        <span class="participant_icon">
                         </span>
-                        <span
-                            class="name"
-                            style="
-                                font-weight: bold;
-                                padding: 5px;
-                                vertical-align: super;
-                            ">
-                            SET LATER
+                        <span class="participant_name">
                         </span>
                     </span>
                 </div>
@@ -523,8 +401,8 @@ class GeoodleControl {
 
         // Find the controls
         this.hoverwindow_controls = {
-            icon: hoverwindow_div.find('.owner_container .icon'),
-            name: hoverwindow_div.find('.owner_container .name'),
+            icon: hoverwindow_div.find('.participant_icon'),
+            name: hoverwindow_div.find('.participant_name'),
             description: hoverwindow_div.find('.description'),
         };
     }
@@ -849,14 +727,10 @@ class GeoodleControl {
     \**************************************/
 
     _update_window_info(geoodle_marker, controls) {
-        controls.icon.css(
-            'background',
-            `url(${ICON_URLS[geoodle_marker.type]}) no-repeat center`
-        );
-        controls.icon.css(
-            'background-color',
-            geoodle_marker.participant.color
-        );
+        controls.icon.css({
+            'background-image': `url(${ICON_URLS[geoodle_marker.type]}) no-repeat center`,
+            'background-color': geoodle_marker.participant.color
+        });
         controls.name.text(
             geoodle_marker.participant.name
         );
@@ -894,8 +768,7 @@ class GeoodleControl {
 
     _get_geoodle_html(geoodle) {
         return `
-            <div
-                geoodle_id="${geoodle.unique_id}">
+            <div geoodle_id="${geoodle.unique_id}">
                 <input
                     type="radio"
                     name="selected_geoodle">
@@ -904,13 +777,9 @@ class GeoodleControl {
                     title="Enter Geoodle's name"
                     placeholder="Geoodle name"
                     type="text"
-                    value="${geoodle.name}"
-                    style="
-                        width: 120px;
-                    "/>
+                    value="${geoodle.name}"/>
 
-                <button
-                    class="remove_geoodle">
+                <button class="remove_geoodle">
                     X
                 </button>
             </div>`;
@@ -941,37 +810,18 @@ class GeoodleControl {
                     class="participant_color"
                     title="Set participant colour"
                     type="color"
-                    value="${geoodle_participant.color}"
-                    style="
-                        border: none;
-                        border-radius: 5px;
-                        width: 20px;
-                    "/>
+                    value="${geoodle_participant.color}"/>
                 <input
                     class="participant_name"
                     title="Enter participants name"
                     placeholder="Participant name"
                     type="text"
-                    value="${geoodle_participant.name}"
-                    style="
-                        width: 65px;
-                    "/>
+                    value="${geoodle_participant.name}"/>
 
-                <button title="Participant transport mode" style="
-                        background: url(${ICON_URLS['directions_'+geoodle_participant.transport_mode]})
-                            no-repeat;
-                        background-position-y: center;
-                        background-position-x: 5px;
-                        background-color: lightgrey;
-                        background-size: 16px;
-                        padding-left: 21px;
-                        min-width: 26px;
-                        height: 26px;
-                        border: none;
-                        border-radius: 5px;
-                     "
-                    class="participant_transport">
-                    <span class="control_label" style="display: none;">
+                <button
+                    class="participant_transport"
+                    title="Participant transport mode">
+                    <span class="control_label">
                         Participant transport mode
                     </span>
                 </button>
@@ -1109,9 +959,9 @@ class GeoodleControl {
 
     _get_transport_times_html(transport_info_dict, participant_distances) {
         let HTML = `
-            <table border="1" style="
-                    margin: auto;
-                    margin-top: 10px;">
+            <table
+                class="transport_times"
+                border="1">
                 <thead>
                     <!--Participant & Source-->
                     <th colspan="2"></th>
@@ -1132,22 +982,14 @@ class GeoodleControl {
             // Add participant header
             HTML += `
                 <tr>
-                    <td rowspan="${participant_info.origin_markers.length}" style="
-                        background-color: ${participant_info.participant.color};
-                        ">
+                    <td rowspan="${participant_info.origin_markers.length}"
+                        style="background-color: ${participant_info.participant.color};">
                         ${participant_info.participant.name || '??'}
                         <br/>
-                        <span title="Participant transport mode" style="
-                            background: url(${ICON_URLS['directions_'+participant_info.participant.transport_mode]})
-                                no-repeat center;
-                            background-color: lightgrey;
-                            background-size: 16px;
-                            min-width: 16px;
-                            height: 16px;
-                            padding: 5px;
-                            border-radius: 5px;
-                            display: inline-block;
-                        ">
+                        <span
+                            class="transport_mode"
+                            title="Participant transport mode"
+                            style="background-image: url(${ICON_URLS['directions_'+participant_info.participant.transport_mode]});">
                         </span>
                     </td>`;
 
@@ -1164,7 +1006,7 @@ class GeoodleControl {
                     let result = participant_distances[participant_info.participant.unique_id][origin_index].elements[destination_index];
                     // Add destination cell
                     HTML += `
-                        <td style="text-align: right;">
+                        <td class="transport_time">
                             ${result.duration.text}
                         </td>`;
                 });
@@ -1184,15 +1026,7 @@ class GeoodleControl {
 
     _show_transport_times(HTML) {
         let control = $(`
-            <div style="
-                    position: absolute;
-                    top: 0px;
-                    bottom: 0px;
-                    left: 0px;
-                    right: 0px;
-                    background-color: white;
-                    z-index: 10000;
-                ">
+            <div class="transport_times_overlay">
                 ${HTML}
             </div>
         `);

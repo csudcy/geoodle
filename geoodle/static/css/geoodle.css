@@ -1,0 +1,180 @@
+
+/**************************************\
+*               CONTROLS               *
+\**************************************/
+
+.container {
+    background-color: white;
+    border: 2px solid rgb(255, 255, 255);
+    border-radius: 3px;
+    box-shadow: rgba(0, 0, 0, 0.298039) 0px 2px 6px;
+    text-align: center;
+}
+
+.button_container {
+    float: left;
+    margin-bottom: -5px;
+}
+
+.control_button {
+    background-repeat: no-repeat;
+    background-position-y: center;
+    background-position-x: 5px;
+    background-color: lightgrey;
+    background-size: 24px;
+    padding-left: 29px;
+    min-width: 34px;
+    width: 100%;
+    height: 34px;
+    border: none;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.control_label {
+    display: none;
+}
+
+.list_container {
+    float: left;
+    max-width: 200px;
+    height: 230px;
+    overflow: auto;
+}
+
+/**************************************\
+*             GEOODLE LIST             *
+\**************************************/
+
+.geoodle_container{
+    text-align: center;
+    display: none;
+    border: 1px solid black;
+    border-radius: 5px;
+    padding: 2px;
+    margin-left: 3px;
+    margin-bottom: 3px;
+}
+
+.add_geoodle {
+    width: 100%;
+    margin-top: 5px;
+}
+
+.geoodle_name {
+    width: 120px;
+}
+
+/**************************************\
+*           PARTICIPANT LIST           *
+\**************************************/
+
+.participant_container {
+    text-align: center;
+    display: none;
+    border: 1px solid black;
+    border-radius: 5px;
+    padding: 2px;
+    margin-left: 3px;
+}
+
+.add_participant {
+    width: 100%;
+    margin-top: 5px;
+}
+
+.participant_color {
+    border: none;
+    border-radius: 5px;
+    width: 20px;
+}
+
+.participant_name {
+    width: 65px;
+}
+
+.participant_transport {
+    background-image: url('/static/icons/ic_directions_walk_black_24px.svg');
+    background-repeat: no-repeat;
+    background-position-y: center;
+    background-position-x: 5px;
+    background-color: lightgrey;
+    background-size: 16px;
+    padding-left: 21px;
+    min-width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: 5px;
+}
+
+/**************************************\
+*             INFO WINDOWS             *
+\**************************************/
+
+.participant_icon {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.participant_name {
+    font-weight: bold;
+    padding: 5px;
+    vertical-align: super;
+
+}
+
+.delete_marker {
+    display: inline-block;
+    background-image: url('/static/icons/ic_delete_black_24px.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color: lightgrey;
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    cursor: pointer;
+    float: right;
+}
+
+.participant_description {
+    width: 175px;
+}
+
+/**************************************\
+*            TRANSPORT TIMES           *
+\**************************************/
+
+.transport_times_overlay {
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    background-color: white;
+    z-index: 10000;
+}
+
+.transport_times {
+    margin: auto;
+    margin-top: 10px;
+}
+
+.transport_times .transport_mode {
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color: lightgrey;
+    background-size: 16px;
+    min-width: 16px;
+    height: 16px;
+    padding: 5px;
+    border-radius: 5px;
+    display: inline-block;
+}
+
+.transport_times .transport_time {
+    text-align: right;
+}

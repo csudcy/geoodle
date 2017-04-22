@@ -25,6 +25,7 @@
     <!--[if lt IE 9]>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.0/gh-fork-ribbon.ie.min.css" />
     <![endif]-->
+    <link rel="stylesheet" href="/static/css/geoodle.css" />
 {% endblock %}
 
 {% block content %}

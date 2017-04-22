@@ -50,7 +50,7 @@ Cool things which inspired me or I'm making use of in this project (in no partic
     * Show best max time
   * ~~Allow multiple Geoodles~~
   * ~~Move Geoodle data to it's own class~~
-  * Move styles to CSS
+  * ~~Move styles to CSS~~
   * Move to localStorage
   * Import/Export Geoodles
   * People can vote on which suggestions they like (or refuse to go to!)
