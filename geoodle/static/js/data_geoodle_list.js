@@ -52,7 +52,7 @@ class GeoodleList {
 
     get_selected_geoodle(auto_add_and_select) {
         // If there are no geoodles, add one
-        if (!Object.keys(this.geoodles)) {
+        if (Object.keys(this.geoodles).length === 0) {
             if (auto_add_and_select === false) return;
 
             let geoodle = this.add_geoodle();

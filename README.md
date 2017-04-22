@@ -48,22 +48,18 @@ Cool things which inspired me or I'm making use of in this project (in no partic
     * Show total best/worst times
     * Show max times
     * Show best max time
-  * Move Geoodle data to it's own class
-    * BUG: Moving markers doesn't emit an update
-    * BUG: Center marker doesn't move while dragging
-  * Allow multiple Geoodles
-    * BUG: Removing selected Geoodle errors
-    * Show Geoodle title somewhere?
+  * ~~Allow multiple Geoodles~~
+  * ~~Move Geoodle data to it's own class~~
+  * Move styles to CSS
   * Move to localStorage
+  * Import/Export Geoodles
   * People can vote on which suggestions they like (or refuse to go to!)
   * Search for places
   * Confirm Geoodle/participant deletion
-  * Import/Export Geoodles
   * Show/Hide participants
   * Duplicate Geoodle?
   * Duplicate participant?
   * BUG: Hover window flickers while dragging
-  * Move styles to CSS
 * Serverside version
   * Login (by name to start with, by social login later)
   * Create a Geoodle

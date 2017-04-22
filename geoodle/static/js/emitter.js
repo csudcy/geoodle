@@ -138,6 +138,28 @@ Emitter.prototype.emit = function(event){
   return this;
 };
 
+
+Emitter.prototype.emit_debounce = function(wait, event){
+  if (arguments.length > 2) {
+    throw new Error('emit_debounce does not support arguments!');
+  }
+
+  this._emitter_timeouts = this._emitter_timeouts || {};
+
+  if (!this._emitter_timeouts[event]) {
+    // Set a new timeout
+    var later = function() {
+      delete this._emitter_timeouts[event];
+      this.emit(event);
+    }.bind(this);
+    this._emitter_timeouts[event] = setTimeout(later, wait);
+  }
+
+  return this;
+};
+
+
+
 /**
  * Return array of callbacks for `event`.
  *

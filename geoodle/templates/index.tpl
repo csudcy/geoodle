@@ -9,6 +9,17 @@
             left: 0px;
             right: 0px;
          }
+         #title {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            right: 0px;
+            text-align: center;
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;
+         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.0/gh-fork-ribbon.min.css" />
     <!--[if lt IE 9]>
@@ -18,6 +29,9 @@
 
 {% block content %}
     <div id="map"></div>
+    <div id="title">
+        Welcome to Geoodle!
+    </div>
     <a
         class="github-fork-ribbon"
         href="https://github.com/csudcy/geoodle"

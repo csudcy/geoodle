@@ -92,6 +92,7 @@ class GeoodleControl {
         this.geoodle_list = new GeoodleList();
         this.infowindow_geoodle_marker = null;
         this.marker_lookup = {};
+        this.dragging_marker = false;
 
         this.init_controls(controlDiv);
         this.init_control_listeners();
@@ -549,7 +550,7 @@ class GeoodleControl {
             // Select the new Geoodle
             geoodle.select();
 
-            this.emit('update');
+            this.emit_debounce(1000, 'update');
         }.bind(this));
 
         this.geoodle_list.on('set_selected_geoodle', function(geoodle) {
@@ -557,7 +558,7 @@ class GeoodleControl {
             this.hide_infowindow();
             this.hide_hoverwindow();
 
-            // Update selected input
+            // Update selected input for Geoodle
             this.controls.geoodle_list.find(
                 `[geoodle_id] input[type="radio"]`
             ).prop('checked', false);
@@ -572,6 +573,17 @@ class GeoodleControl {
                     participant.select();
                 }
             }
+
+            // HACK: Re-select selected participant so the radio button is checked
+            if (geoodle) {
+                let participant = geoodle.get_selected_participant(false);
+                if (participant) {
+                    participant.select();
+                }
+            }
+
+            // Emit update_title so it can be displayed nicely
+            this.update_selected_geoodle_title();
         }.bind(this));
     }
 
@@ -585,7 +597,10 @@ class GeoodleControl {
             let geoodle_element = this.controls.geoodle_list.find(`[geoodle_id=${geoodle.unique_id}]`);
             geoodle_element.find('.geoodle_name').val(geoodle.name);
 
-            this.emit('update');
+            // HACK: Always update the title (even if it hasn't changed)
+            this.update_selected_geoodle_title();
+
+            this.emit_debounce(1000, 'update');
         }.bind(this));
 
         geoodle.on('remove', function() {
@@ -594,7 +609,7 @@ class GeoodleControl {
                 `[geoodle_id=${geoodle.unique_id}]`
             ).remove();
 
-            this.emit('update');
+            this.emit_debounce(1000, 'update');
         }.bind(this));
 
         geoodle.on('add_participant', function(geoodle_participant) {
@@ -606,7 +621,7 @@ class GeoodleControl {
             // Add listeners
             this.init_geoodleparticipant_listeners(geoodle_participant);
 
-            this.emit('update');
+            this.emit_debounce(1000, 'update');
         }.bind(this));
 
         geoodle.on('set_selected_participant', function(geoodle_participant) {
@@ -623,7 +638,7 @@ class GeoodleControl {
                 ).prop('checked', true);
             }
 
-            this.emit('update');
+            this.emit_debounce(1000, 'update');
         }.bind(this));
 
         geoodle.on('set_add_mode', function(add_mode) {
@@ -641,6 +656,7 @@ class GeoodleControl {
 
         geoodle_participant.on('update', function() {
             // Update UI
+            // HACK: Always update the color (even if it hasn't changed)
             this.update_selected_participant_color();
             this.update_infowindow(geoodle_participant.unique_id);
 
@@ -658,7 +674,7 @@ class GeoodleControl {
                 participant_element.hide();
             }
 
-            this.emit('update');
+            this.emit_debounce(1000, 'update');
         }.bind(this));
 
         geoodle_participant.on('remove', function() {
@@ -667,7 +683,7 @@ class GeoodleControl {
                 `[participant_id=${geoodle_participant.unique_id}]`
             ).remove();
 
-            this.emit('update');
+            this.emit_debounce(1000, 'update');
         }.bind(this));
 
         geoodle_participant.on('add_marker', function(geoodle_marker) {
@@ -689,34 +705,32 @@ class GeoodleControl {
             gmaps_marker.addListener('click', function() {
                 this.show_infowindow(geoodle_marker);
             }.bind(this));
-            gmaps_marker.addListener('drag', function() {
-                // TODO: Make this update centre while dragging
-                // let latLng = gmaps_marker.getPosition();
-                // geoodle_marker.update('position', {
-                //     lat: latLng.lat(),
-                //     lng: latLng.lng(),
-                // });
 
-                // this.update_center_marker();
-            }.bind(this));
-            gmaps_marker.addListener('dragend', function() {
-                // TODO
+            gmaps_marker.addListener('drag', function() {
+                this.dragging_marker = true;
                 let latLng = gmaps_marker.getPosition();
                 geoodle_marker.update('position', {
                     lat: latLng.lat(),
                     lng: latLng.lng(),
                 });
+            }.bind(this));
 
-                this.update_center_marker();
+            gmaps_marker.addListener('dragend', function() {
+                this.dragging_marker = false;
+                let latLng = gmaps_marker.getPosition();
+                geoodle_marker.update('position', {
+                    lat: latLng.lat(),
+                    lng: latLng.lng(),
+                });
             }.bind(this));
 
             gmaps_marker.addListener('mouseover', function() {
                 this.show_hoverwindow(geoodle_marker);
             }.bind(this));
+
             gmaps_marker.addListener('mouseout', function() {
                 this.hide_hoverwindow();
             }.bind(this));
-
 
             // Add listeners
             this.init_geoodlemarker_listeners(geoodle_marker);
@@ -724,7 +738,7 @@ class GeoodleControl {
             // Update anything dependent on markers
             this.update_center_marker();
 
-            this.emit('update');
+            this.emit_debounce(1000, 'update');
         }.bind(this));
     }
 
@@ -734,25 +748,31 @@ class GeoodleControl {
         );
 
         geoodle_marker.on('update', function() {
-            let gmaps_marker = this.marker_lookup[geoodle_marker.unique_id];
-            gmaps_marker.setIcon({
-                path: SVG_PATHS[geoodle_marker.type],
-                fillColor: geoodle_marker.participant.color,
-                fillOpacity: gmaps_marker.icon.fillOpacity,
-                anchor: gmaps_marker.icon.anchor
-            });
+            // Only do some updates when this is not a drag update
+            if (!this.dragging_marker) {
+                let gmaps_marker = this.marker_lookup[geoodle_marker.unique_id];
+                gmaps_marker.setIcon({
+                    path: SVG_PATHS[geoodle_marker.type],
+                    fillColor: geoodle_marker.participant.color,
+                    fillOpacity: gmaps_marker.icon.fillOpacity,
+                    anchor: gmaps_marker.icon.anchor
+                });
 
-            gmaps_marker.setPosition(geoodle_marker.position);
+                gmaps_marker.setPosition(geoodle_marker.position);
 
-            if (geoodle_marker.visible) {
-                gmaps_marker.setMap(this.map);
-            } else {
-                gmaps_marker.setMap(null);
+                if (geoodle_marker.visible) {
+                    gmaps_marker.setMap(this.map);
+                } else {
+                    gmaps_marker.setMap(null);
+                }
+
+                this.update_infowindow();
             }
 
             // Update anything dependent on markers
             this.update_center_marker();
-            this.update_infowindow();
+
+            this.emit_debounce(1000, 'update');
         }.bind(this));
 
         geoodle_marker.on('remove', function() {
@@ -857,7 +877,11 @@ class GeoodleControl {
     \**************************************/
 
     update_center_marker() {
-        let center = this.geoodle_list.get_selected_geoodle().get_center();
+        let center = null;
+        let geoodle = this.geoodle_list.get_selected_geoodle(false);
+        if (geoodle) {
+            center = geoodle.get_center();
+        }
         this.center_marker.setPosition(center || this.center);
     }
 
@@ -892,6 +916,16 @@ class GeoodleControl {
                 </button>
             </div>`;
     }
+
+    update_selected_geoodle_title() {
+        let title;
+        let geoodle = this.geoodle_list.get_selected_geoodle(false);
+        if (geoodle) {
+            title = geoodle.name;
+        }
+        this.emit('update_title', title);
+    }
+
 
     /**************************************\
     *        PARTICIPANT MANAGEMENT        *

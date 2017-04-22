@@ -13,6 +13,14 @@ function initMap() {
     geoodleControlDiv.index = 1;
     map.controls[google.maps.ControlPosition.LEFT_CENTER].push(geoodleControlDiv);
 
+    // Display the title
+    geoodleControl.on('update_title', function(title) {
+        if (!title) {
+            title = 'Welcome to Geoodle!';
+        }
+        $('#title').text(title);
+    });
+
     // Whenever there is an update on the map, update the URL hash
     geoodleControl.on('update', function() {
         console.log('Update!');

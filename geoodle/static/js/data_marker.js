@@ -60,7 +60,7 @@ class Marker {
 
         // Save updated attribute
         this[attr] = value;
-        this.emit('update');
+        this.emit_debounce(100, 'update');
     }
 
     remove() {
