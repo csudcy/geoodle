@@ -85,6 +85,7 @@ class GeoodleControl {
     /**************************************\
     *            INITIALISATION            *
     \**************************************/
+
     constructor(controlDiv, map, center) {
         this.map = map;
         this.center = center;
@@ -794,7 +795,6 @@ class GeoodleControl {
         this.emit('update_title', title);
     }
 
-
     /**************************************\
     *        PARTICIPANT MANAGEMENT        *
     \**************************************/
@@ -1069,7 +1069,6 @@ class GeoodleControl {
     deserialise(input) {
         this.geoodle_list.deserialise(input);
     }
-
 }
 
 Emitter(GeoodleControl.prototype);
